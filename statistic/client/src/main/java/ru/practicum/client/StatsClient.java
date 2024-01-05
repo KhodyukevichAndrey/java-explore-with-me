@@ -35,7 +35,7 @@ public class StatsClient {
         return makeAndSendRequest(HttpMethod.POST, "/hit", null, dto);
     }
 
-    protected ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, @Nullable String[] uris, @Nullable Boolean unique) {
+    public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, @Nullable String[] uris, @Nullable Boolean unique) {
         String encodedStart = URLEncoder.encode(start.format(FORMATTER), StandardCharsets.UTF_8);
         String encodedEnd = URLEncoder.encode(end.format(FORMATTER), StandardCharsets.UTF_8);
 
@@ -59,7 +59,7 @@ public class StatsClient {
         return makeAndSendRequest(HttpMethod.GET, builder.toString(), parameters, null);
     }
 
-    private <T> ResponseEntity<Object> makeAndSendRequest(HttpMethod method, String path, @Nullable Map<String, Object> parameters, T body) {
+    private <T> ResponseEntity<Object> makeAndSendRequest(HttpMethod method, String path, @Nullable Map<String, Object> parameters, @Nullable T body) {
         HttpEntity<T> requestEntity = new HttpEntity<>(body);
 
         ResponseEntity<Object> ewmServerResponse;
