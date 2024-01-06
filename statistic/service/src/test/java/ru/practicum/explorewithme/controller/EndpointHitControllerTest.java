@@ -54,6 +54,28 @@ class EndpointHitControllerTest {
     }
 
     @Test
+    void addNewHitAndThenOk() throws Exception {
+        mvc.perform(post("/hit")
+                        .content(objectMapper.writeValueAsString(endpointHitDto))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void addNewHitAndThenThrowsBadRequest() throws Exception {
+        endpointHitDto.setApp("");
+
+        mvc.perform(post("/hit")
+                        .content(objectMapper.writeValueAsString(endpointHitDto))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void getEndpointHitStatsAndThenOk() throws Exception {
         when(service.getStats(any(), any(), any(), any())).thenReturn(List.of(statsDto));
 
