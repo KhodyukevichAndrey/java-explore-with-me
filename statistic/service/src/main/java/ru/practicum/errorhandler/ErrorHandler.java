@@ -6,6 +6,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.practicum.exception.ValidateException;
 
 import javax.validation.ConstraintViolationException;
 
@@ -13,7 +14,7 @@ import javax.validation.ConstraintViolationException;
 @Slf4j
 public class ErrorHandler {
 
-    @ExceptionHandler({ConstraintViolationException.class, MethodArgumentNotValidException.class})
+    @ExceptionHandler({ConstraintViolationException.class, MethodArgumentNotValidException.class, ValidateException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleConstraintViolationException(final RuntimeException exception) {
         log.debug("Получен статус 400 Bad Request {}", exception.getMessage(), exception);

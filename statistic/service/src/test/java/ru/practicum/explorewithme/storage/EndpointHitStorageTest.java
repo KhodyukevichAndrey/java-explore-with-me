@@ -37,7 +37,7 @@ class EndpointHitStorageTest {
 
     @BeforeEach
     void createStatsControllerEnvironment() {
-        endpointHitDto = new EndpointHitDto("appText", "uriText", "ipText");
+        endpointHitDto = new EndpointHitDto("appText", "uriText", "ipText", LocalDateTime.now());
         endpointHit = EndpointHitMapper.makeEndpointHit(endpointHitDto);
         statsDto = new EndpointHitStatsDto(endpointHitDto.getApp(), endpointHitDto.getUri(), 1);
     }

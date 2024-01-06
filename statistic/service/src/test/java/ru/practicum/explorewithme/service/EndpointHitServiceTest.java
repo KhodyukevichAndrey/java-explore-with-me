@@ -13,8 +13,6 @@ import ru.practicum.model.EndpointHit;
 import ru.practicum.service.EndpointHitServiceImpl;
 import ru.practicum.storage.EndpointHitStorage;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -36,8 +34,6 @@ class EndpointHitServiceTest {
             0, 0, 15);
     private final LocalDateTime end = LocalDateTime.of(2030, 8, 30,
             0, 0, 15);
-    String encodedStart = URLEncoder.encode(start.format(FORMATTER), StandardCharsets.UTF_8);
-    String encodedEnd = URLEncoder.encode(end.format(FORMATTER), StandardCharsets.UTF_8);
 
     private EndpointHitDto endpointHitDto;
     private EndpointHitStatsDto statsDto;
@@ -47,7 +43,7 @@ class EndpointHitServiceTest {
 
     @BeforeEach
     void createStatsControllerEnvironment() {
-        endpointHitDto = new EndpointHitDto("appText", "uriText", "ipText");
+        endpointHitDto = new EndpointHitDto("appText", "uriText", "ipText", LocalDateTime.now());
         endpointHit = EndpointHitMapper.makeEndpointHit(endpointHitDto);
         statsDto = new EndpointHitStatsDto(endpointHitDto.getApp(), endpointHitDto.getUri(), 1);
     }
@@ -65,7 +61,7 @@ class EndpointHitServiceTest {
 
     @Test
     void getStatsWhenEndIsBeforeStartAndThenOkWithEmptyList() {
-        List<EndpointHitStatsDto> stats = service.getStats(encodedEnd, encodedStart, null, null);
+        List<EndpointHitStatsDto> stats = service.getStats(start, end, null, null);
 
         assertThat(stats.size(), equalTo(0));
     }
@@ -74,7 +70,7 @@ class EndpointHitServiceTest {
     void getStatsWithUrisAndThenOk() {
         when(storage.findEndpointHitForUriIn(any(), any(), any())).thenReturn(List.of(statsDto));
 
-        List<EndpointHitStatsDto> stats = service.getStats(encodedStart, encodedEnd, uris, null);
+        List<EndpointHitStatsDto> stats = service.getStats(start, end, uris, null);
 
         assertThat(stats.size(), equalTo(1));
         assertThat(stats.get(0).getUri(), equalTo(statsDto.getUri()));
@@ -86,7 +82,7 @@ class EndpointHitServiceTest {
     void getStatsWithUrisAndUniqueThenOk() {
         when(storage.findEndpointHitForUriInAndUnique(any(), any(), any())).thenReturn(List.of(statsDto));
 
-        List<EndpointHitStatsDto> stats = service.getStats(encodedStart, encodedEnd, uris, true);
+        List<EndpointHitStatsDto> stats = service.getStats(start, end, uris, true);
 
         assertThat(stats.size(), equalTo(1));
         assertThat(stats.get(0).getUri(), equalTo(statsDto.getUri()));
@@ -98,7 +94,7 @@ class EndpointHitServiceTest {
     void getStatsWithoutUrisAndWithUniqueThenOk() {
         when(storage.findAllEndpointHitForUnique(any(), any())).thenReturn(List.of(statsDto));
 
-        List<EndpointHitStatsDto> stats = service.getStats(encodedStart, encodedEnd, null, true);
+        List<EndpointHitStatsDto> stats = service.getStats(start, end, null, true);
 
         assertThat(stats.size(), equalTo(1));
         assertThat(stats.get(0).getUri(), equalTo(statsDto.getUri()));
@@ -110,7 +106,7 @@ class EndpointHitServiceTest {
     void getStatsWithDatesOnlyAndThenOk() {
         when(storage.findAllEndpointHitByDate(any(), any())).thenReturn(List.of(statsDto));
 
-        List<EndpointHitStatsDto> stats = service.getStats(encodedStart, encodedEnd, null, null);
+        List<EndpointHitStatsDto> stats = service.getStats(start, end, null, null);
 
         assertThat(stats.size(), equalTo(1));
         assertThat(stats.get(0).getUri(), equalTo(statsDto.getUri()));

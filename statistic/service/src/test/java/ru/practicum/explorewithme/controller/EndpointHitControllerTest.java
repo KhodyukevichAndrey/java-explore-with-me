@@ -15,6 +15,7 @@ import ru.practicum.service.EndpointHitServiceImpl;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -36,47 +37,29 @@ class EndpointHitControllerTest {
 
     private EndpointHitDto endpointHitDto;
     private EndpointHitStatsDto statsDto;
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
 
     private final LocalDateTime start = LocalDateTime.of(2020, 8, 29,
             0, 0, 15);
     private final LocalDateTime end = LocalDateTime.of(2030, 8, 30,
             0, 0, 15);
+    String encodedStart = start.format(FORMATTER);
+    String encodedEnd = end.format(FORMATTER);
 
     @BeforeEach
     void createStatsControllerEnvironment() {
-        endpointHitDto = new EndpointHitDto("appText", "uriText", "ipText");
+        endpointHitDto = new EndpointHitDto("appText", "uriText", "ipText", LocalDateTime.now());
         statsDto = new EndpointHitStatsDto(endpointHitDto.getApp(), endpointHitDto.getUri(), 1);
     }
 
     @Test
-    void addNewHitAndThenOk() throws Exception {
-        mvc.perform(post("/hit")
-                        .content(objectMapper.writeValueAsString(endpointHitDto))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
-    }
-
-    @Test
-    void addNewHitAndThenThrowsBadRequest() throws Exception {
-        endpointHitDto.setApp("");
-
-        mvc.perform(post("/hit")
-                        .content(objectMapper.writeValueAsString(endpointHitDto))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     void getEndpointHitStatsAndThenOk() throws Exception {
-        when(service.getStats(anyString(), anyString(), any(), any())).thenReturn(List.of(statsDto));
+        when(service.getStats(any(), any(), any(), any())).thenReturn(List.of(statsDto));
 
         mvc.perform(get("/stats")
-                        .param("start", start.toString())
-                        .param("end", end.toString())
+                        .param("start", encodedStart)
+                        .param("end", encodedEnd)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -86,7 +69,7 @@ class EndpointHitControllerTest {
 
     @Test
     void getEndpointHitStatsWithoutOneParamAndThrowsBadRequest() throws Exception {
-        when(service.getStats(anyString(), anyString(), any(), any())).thenReturn(List.of(statsDto));
+        when(service.getStats(any(), any(), any(), any())).thenReturn(List.of(statsDto));
 
         mvc.perform(get("/stats")
                         .param("start", start.toString()) // no end

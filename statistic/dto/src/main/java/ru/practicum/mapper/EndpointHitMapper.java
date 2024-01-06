@@ -4,8 +4,6 @@ import lombok.experimental.UtilityClass;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.model.EndpointHit;
 
-import java.time.LocalDateTime;
-
 @UtilityClass
 public class EndpointHitMapper {
 
@@ -15,7 +13,7 @@ public class EndpointHitMapper {
                 dto.getApp(),
                 dto.getUri(),
                 dto.getIp(),
-                LocalDateTime.now()
+                dto.getTimestamp()
         );
     }
 
@@ -23,7 +21,8 @@ public class EndpointHitMapper {
         return new EndpointHitDto(
                 endpointHit.getApp(),
                 endpointHit.getUri(),
-                endpointHit.getIp()
+                endpointHit.getIp(),
+                endpointHit.getDateTime()
         );
     }
 }

@@ -48,7 +48,7 @@ public class StatsClient {
         builder.append("/stats?start={start}&end={end}");
 
         if (uris != null) {
-            parameters.put("uris", uris);
+            parameters.put("uris", String.join(",", uris));
             builder.append("&uris={uris}");
         }
 
