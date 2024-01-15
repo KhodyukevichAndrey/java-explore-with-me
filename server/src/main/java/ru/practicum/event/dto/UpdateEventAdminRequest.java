@@ -8,6 +8,6 @@ import ru.practicum.event.state.StateAction;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UpdateEventAdminRequest extends NewEventDto{
+public class UpdateEventAdminRequest extends NewEventDto {
     private StateAction stateAction;
 }

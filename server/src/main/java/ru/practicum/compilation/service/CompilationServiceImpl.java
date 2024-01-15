@@ -1,9 +1,13 @@
 package ru.practicum.compilation.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.StatsClient;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.dto.NewCompilationDto;
 import ru.practicum.compilation.dto.UpdateCompilationRequest;
@@ -12,7 +16,6 @@ import ru.practicum.compilation.model.Compilation;
 import ru.practicum.compilation.storage.CompilationStorage;
 import ru.practicum.constants.sort.SortConstants;
 import ru.practicum.dto.EndpointHitStatsDto;
-import ru.practicum.endpointhit.storage.EndpointHitStorage;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
@@ -38,8 +41,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationStorage compilationStorage;
     private final EventStorage eventStorage;
     private final RequestStorage requestStorage;
-    private final EndpointHitStorage endpointHitStorage;
-
+    private final StatsClient statsClient;
 
     @Override
     @Transactional
@@ -159,8 +161,8 @@ public class CompilationServiceImpl implements CompilationService {
                 .map(Event::getPublishedOn)
                 .min(Comparator.naturalOrder()).get();
 
-        List<EndpointHitStatsDto> stats = endpointHitStorage.findEndpointHitForUriInAndUnique(rangeStart.minusHours(1),
-                LocalDateTime.now(), urisArray);
+        List<EndpointHitStatsDto> stats = getStatsDto(rangeStart.minusHours(1), LocalDateTime.now(), urisArray,
+                true);
 
         return stats.stream()
                 .collect(toMap(endpoint -> Long.parseLong(endpoint.getUri().substring(9)),
@@ -174,5 +176,18 @@ public class CompilationServiceImpl implements CompilationService {
                                 confirmed.getOrDefault(event.getId(), 0L),
                                 views.getOrDefault(event.getId(), 0L)))
                 .collect(toList());
+    }
+
+    private List<EndpointHitStatsDto> getStatsDto(LocalDateTime rangeStart, LocalDateTime rangeEnd, String[] urisArray,
+                                                  boolean unique) { // костыль :/
+        ResponseEntity<Object> responseEntity = statsClient.getStats(rangeStart, rangeEnd, urisArray, unique);
+        Object body = responseEntity.getBody();
+
+        if (body == null) {
+            return Collections.emptyList();
+        }
+
+        return new ObjectMapper().convertValue(body, new TypeReference<>() {
+        });
     }
 }

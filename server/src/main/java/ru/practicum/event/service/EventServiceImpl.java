@@ -1,11 +1,15 @@
 package ru.practicum.event.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.model.Category;
+import ru.practicum.client.StatsClient;
 import ru.practicum.constants.error.ErrorConstants;
 import ru.practicum.constants.sort.SortConstants;
 import ru.practicum.dto.EndpointHitStatsDto;
@@ -31,7 +35,6 @@ import ru.practicum.request.status.Status;
 import ru.practicum.request.storage.RequestStorage;
 import ru.practicum.user.model.User;
 import ru.practicum.user.storage.UserStorage;
-import ru.practicum.endpointhit.storage.EndpointHitStorage;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -51,7 +54,7 @@ public class EventServiceImpl implements EventService {
     private final UserStorage userStorage;
     private final CategoryStorage categoryStorage;
     private final RequestStorage requestStorage;
-    private final EndpointHitStorage endpointHitStorage;
+    private final StatsClient statsClient;
 
     // For EventPrivateController
     @Override
@@ -386,8 +389,8 @@ public class EventServiceImpl implements EventService {
                 .map(Event::getPublishedOn)
                 .min(Comparator.naturalOrder()).get();
 
-        List<EndpointHitStatsDto> stats = endpointHitStorage.findEndpointHitForUriInAndUnique(rangeStart.minusHours(1),
-                LocalDateTime.now(), urisArray);
+        List<EndpointHitStatsDto> stats = getStatsDto(rangeStart.minusHours(1), LocalDateTime.now(), urisArray,
+                true);
 
         return stats.stream()
                 .collect(toMap(endpoint -> Long.parseLong(endpoint.getUri().substring(9)),
@@ -410,5 +413,18 @@ public class EventServiceImpl implements EventService {
                                 confirmed.getOrDefault(event.getId(), 0L),
                                 views.getOrDefault(event.getId(), 0L)))
                 .collect(toList());
+    }
+
+    private List<EndpointHitStatsDto> getStatsDto(LocalDateTime rangeStart, LocalDateTime rangeEnd, String[] urisArray,
+                                                  boolean unique) { // костыль :/
+        ResponseEntity<Object> responseEntity = statsClient.getStats(rangeStart, rangeEnd, urisArray, unique);
+        Object body = responseEntity.getBody();
+
+        if (body == null) {
+            return Collections.emptyList();
+        }
+
+        return new ObjectMapper().convertValue(body, new TypeReference<>() {
+        });
     }
 }
