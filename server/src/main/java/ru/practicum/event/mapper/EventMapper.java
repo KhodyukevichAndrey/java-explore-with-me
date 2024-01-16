@@ -82,10 +82,10 @@ public class EventMapper {
                 event.getEventDate(),
                 UserMapper.makeUserShortDto(event.getInitiator()),
                 event.getLocation(),
-                event.isPaid(),
+                event.getIsPaid(),
                 event.getParticipantLimit(),
                 event.getPublishedOn(),
-                event.isRequestModeration(),
+                event.getRequestModeration(),
                 event.getEventState(),
                 event.getTitle(),
                 views
@@ -96,13 +96,13 @@ public class EventMapper {
         return new EventShortDto(
                 event.getAnnotation(),
                 event.getCategory(),
-                0, //переделка
+                confirmedRequest, //переделка
                 event.getEventDate(),
                 event.getId(),
                 UserMapper.makeUserShortDto(event.getInitiator()),
-                event.isPaid(),
+                event.getIsPaid(),
                 event.getTitle(),
-                0 //переделка
+                views //переделка
         );
     }
 }

@@ -54,7 +54,7 @@ public class RequestServiceImpl implements RequestService {
         if (limit != 0 && confirmedRequest.getOrDefault(eventId, 0L) == limit) {
             throw new ConflictException(OUT_OF_LIMIT_PARTICIPATION);
         }
-        if (!event.isRequestModeration()) {
+        if (!event.getRequestModeration()) {
             request.setStatus(Status.CONFIRMED);
         }
 

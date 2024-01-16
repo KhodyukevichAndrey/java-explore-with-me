@@ -15,11 +15,11 @@ public class EventShortDto {
 
     private String annotation;
     private Category category;
-    private int confirmedRequests;
+    private long confirmedRequests;
     private LocalDateTime eventDate;
     private long id;
     private UserShortDto initiator;
     private boolean paid;
     private String title;
-    private int views;
+    private long views;
 }

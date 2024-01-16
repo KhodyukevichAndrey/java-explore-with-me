@@ -38,14 +38,14 @@ public class Event {
             @AttributeOverride(name = "lat", column = @Column(name = "location_lat")),
             @AttributeOverride(name = "lon", column = @Column(name = "location_lon"))})
     private Location location;
-    @Column(name = "is_paid")
-    private boolean isPaid;
-    @Column(name = "participant_limit")
-    private long participantLimit;
+    @Column(name = "is_paid", nullable = false, columnDefinition = "boolean default false")
+    private Boolean isPaid;
+    @Column(name = "participant_limit", nullable = false, columnDefinition = "long default 0L")
+    private Long participantLimit;
     @Column(name = "published_on")
     private LocalDateTime publishedOn;
-    @Column(name = "request_moderation")
-    private boolean requestModeration;
+    @Column(name = "request_moderation", nullable = false, columnDefinition = "boolean default true")
+    private Boolean requestModeration;
     @Enumerated(EnumType.STRING)
     @Column(name = "state")
     private EventState eventState;

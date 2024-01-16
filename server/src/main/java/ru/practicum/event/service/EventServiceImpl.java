@@ -152,7 +152,7 @@ public class EventServiceImpl implements EventService {
         Long[] ids = requests.getRequestIds();
         long participationCount = requestStorage.getCountOfParticipation(eventId, Status.CONFIRMED);
 
-        if (event.getParticipantLimit() == 0 || !event.isRequestModeration()) {
+        if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) {
             return getRequestWithoutLimitAndModeration(ids);
         }
 
@@ -365,13 +365,13 @@ public class EventServiceImpl implements EventService {
             dto.setLocation(event.getLocation());
         }
         if (dto.getPaid() == null) {
-            dto.setPaid(event.isPaid());
+            dto.setPaid(event.getIsPaid());
         }
         if (dto.getParticipantLimit() == null) {
             dto.setParticipantLimit(event.getParticipantLimit());
         }
         if (dto.getRequestModeration() == null) {
-            dto.setRequestModeration(event.isRequestModeration());
+            dto.setRequestModeration(event.getRequestModeration());
         }
         if (dto.getTitle() == null) {
             dto.setTitle(event.getTitle());
@@ -396,13 +396,13 @@ public class EventServiceImpl implements EventService {
             dto.setLocation(event.getLocation());
         }
         if (dto.getPaid() == null) {
-            dto.setPaid(event.isPaid());
+            dto.setPaid(event.getIsPaid());
         }
         if (dto.getParticipantLimit() == null) {
             dto.setParticipantLimit(event.getParticipantLimit());
         }
         if (dto.getRequestModeration() == null) {
-            dto.setRequestModeration(event.isRequestModeration());
+            dto.setRequestModeration(event.getRequestModeration());
         }
         if (dto.getTitle() == null) {
             dto.setTitle(event.getTitle());
