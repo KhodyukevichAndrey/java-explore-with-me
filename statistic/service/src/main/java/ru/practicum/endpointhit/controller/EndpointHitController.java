@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.EndpointHitStatsDto;
@@ -22,10 +21,10 @@ public class EndpointHitController {
     private final EndpointHitService service;
 
     @PostMapping("/hit")
-    public ResponseEntity<String> addStatNode(@Valid @RequestBody EndpointHitDto endpointHitDto) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public EndpointHitDto addStatNode(@Valid @RequestBody EndpointHitDto endpointHitDto) {
         log.debug("Получен запрос POST /hit");
-        service.addCallEndpointHit(endpointHitDto);
-        return new ResponseEntity<>("Данные успешно добавлены", HttpStatus.CREATED);
+        return service.addCallEndpointHit(endpointHitDto);
     }
 
     @GetMapping("/stats")

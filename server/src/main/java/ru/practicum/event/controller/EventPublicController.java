@@ -11,8 +11,8 @@ import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.service.EventService;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,13 +30,13 @@ public class EventPublicController {
                                                  @RequestParam(required = false) Integer[] categories,
                                                  @RequestParam(required = false) Boolean paid,
                                                  @RequestParam(required = false)
-                                                @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
+                                                 @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
                                                  @RequestParam(required = false)
-                                                @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
+                                                 @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                                  @RequestParam(defaultValue = "false") Boolean onlyAvailable,
                                                  @RequestParam(required = false) String sort,
-                                                 @RequestParam(defaultValue = "0") @Min(0) @Max(25) int from,
-                                                 @RequestParam(defaultValue = "10") @Min(0) @Max(25) int size,
+                                                 @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                                 @RequestParam(defaultValue = "10") @Positive int size,
                                                  HttpServletRequest request) {
         log.debug("Получен запрос Get /events");
         client.postEndpointHit(new EndpointHitDto(

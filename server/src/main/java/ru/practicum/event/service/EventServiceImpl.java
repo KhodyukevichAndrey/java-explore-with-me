@@ -13,15 +13,12 @@ import ru.practicum.client.StatsClient;
 import ru.practicum.constants.error.ErrorConstants;
 import ru.practicum.constants.sort.SortConstants;
 import ru.practicum.dto.EndpointHitStatsDto;
-import ru.practicum.event.dto.EventFullDto;
-import ru.practicum.event.dto.EventShortDto;
+import ru.practicum.event.dto.*;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.state.EventState;
 import ru.practicum.event.storage.EventStorage;
 import ru.practicum.exception.EntityNotFoundException;
 import ru.practicum.category.storage.CategoryStorage;
-import ru.practicum.event.dto.NewEventDto;
-import ru.practicum.event.dto.UpdateEventAdminRequest;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.state.StateAction;
 import ru.practicum.exception.ConflictException;
@@ -42,7 +39,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
-import static ru.practicum.constants.error.ErrorConstants.WRONG_STATUS;
+import static ru.practicum.constants.error.ErrorConstants.*;
 
 @Service
 @Slf4j
@@ -95,15 +92,37 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventFullDto updateEventByInitiator(long userId, long eventId, NewEventDto dto) {
+    public EventFullDto updateEventByInitiator(long userId, long eventId, UpdateEventUserRequest dto) {
         User user = getUser(userId);
-        Category category = getCat(dto.getCategory());
         Event event = getEvent(eventId);
+
+        if (dto.getCategory() != null) {
+            event.setCategory(getCat(dto.getCategory()));
+        }
+
         Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
         Map<Long, Long> views = getViews(List.of(event));
 
+        completeFieldsByUserUpdate(dto, event);
+
+        if (event.getEventState().equals(EventState.PUBLISHED)) {
+            throw new ConflictException(EVENT_NOT_AVAILABLE_STATE);
+        }
+
+        if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new ConflictException(BAD_START_TIME);
+        }
+
+        if (dto.getStateAction().equals(StateAction.SEND_TO_REVIEW)) {
+            event.setEventState(EventState.PENDING);
+        }
+
+        if (dto.getStateAction().equals(StateAction.CANCEL_REVIEW)) {
+            event.setEventState(EventState.CANCELED);
+        }
+
         if (event.getInitiator().getId() == userId) {
-            Event eventForUpdate = EventMapper.makeEvent(dto, user, category);
+            Event eventForUpdate = EventMapper.makeEventForUpdateByInitiator(dto, user, event.getCategory(), event);
             eventStorage.save(eventForUpdate);
             return makeEventFull(List.of(eventForUpdate), confirmed, views).get(0);
         } else {
@@ -178,19 +197,19 @@ public class EventServiceImpl implements EventService {
         Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
         Map<Long, Long> views = getViews(List.of(event));
 
-        completeFields(dto, event);
+        completeFieldsByAdminUpdate(dto, event);
 
         if (!eventDate.isAfter(LocalDateTime.now().plusHours(1L))) {
             throw new NotAvailableException(ErrorConstants.EVENT_START_TIME);
         }
         if (!event.getEventState().equals(EventState.PENDING)) {
-            throw new NotAvailableException(ErrorConstants.EVENT_NOT_AVAILABLE_STATE);
+            throw new NotAvailableException(EVENT_NOT_AVAILABLE_STATE);
         }
         if (event.getEventState().equals(EventState.PUBLISHED)) {
-            throw new NotAvailableException(ErrorConstants.EVENT_NOT_AVAILABLE_STATE);
+            throw new NotAvailableException(EVENT_NOT_AVAILABLE_STATE);
         }
 
-        Event eventForUpdate = EventMapper.makeEventForUpdate(dto, event.getInitiator(), event.getCategory(), eventId);
+        Event eventForUpdate = EventMapper.makeEventForUpdateByAdmin(dto, event.getInitiator(), event.getCategory(), eventId);
         if (stateAction.equals(StateAction.PUBLISH_EVENT)) {
             eventForUpdate.setEventState(EventState.PUBLISHED);
             eventStorage.save(eventForUpdate);
@@ -236,7 +255,7 @@ public class EventServiceImpl implements EventService {
         if (event.getEventState().equals(EventState.PUBLISHED)) {
             return makeEventFull(List.of(event), confirmed, views).get(0);
         } else {
-            return null;
+            throw new EntityNotFoundException(WRONG_EVENT_ID);
         }
     }
 
@@ -329,7 +348,38 @@ public class EventServiceImpl implements EventService {
         return result;
     }
 
-    private UpdateEventAdminRequest completeFields(UpdateEventAdminRequest dto, Event event) {
+    private UpdateEventAdminRequest completeFieldsByAdminUpdate(UpdateEventAdminRequest dto, Event event) {
+        if (dto.getAnnotation() == null) {
+            dto.setAnnotation(event.getAnnotation());
+        }
+        if (dto.getCategory() == null) {
+            dto.setCategory(event.getCategory().getId());
+        }
+        if (dto.getDescription() == null) {
+            dto.setDescription(event.getDescription());
+        }
+        if (dto.getEventDate() == null) {
+            dto.setEventDate(event.getEventDate());
+        }
+        if (dto.getLocation() == null) {
+            dto.setLocation(event.getLocation());
+        }
+        if (dto.getPaid() == null) {
+            dto.setPaid(event.isPaid());
+        }
+        if (dto.getParticipantLimit() == null) {
+            dto.setParticipantLimit(event.getParticipantLimit());
+        }
+        if (dto.getRequestModeration() == null) {
+            dto.setRequestModeration(event.isRequestModeration());
+        }
+        if (dto.getTitle() == null) {
+            dto.setTitle(event.getTitle());
+        }
+        return dto;
+    }
+
+    private UpdateEventUserRequest completeFieldsByUserUpdate(UpdateEventUserRequest dto, Event event) {
         if (dto.getAnnotation() == null) {
             dto.setAnnotation(event.getAnnotation());
         }
@@ -416,7 +466,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private List<EndpointHitStatsDto> getStatsDto(LocalDateTime rangeStart, LocalDateTime rangeEnd, String[] urisArray,
-                                                  boolean unique) { // костыль :/
+                                                  boolean unique) {
         ResponseEntity<Object> responseEntity = statsClient.getStats(rangeStart, rangeEnd, urisArray, unique);
         Object body = responseEntity.getBody();
 

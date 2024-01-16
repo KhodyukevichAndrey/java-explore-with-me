@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.event.model.Location;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
@@ -16,10 +17,12 @@ import java.time.LocalDateTime;
 public class NewEventDto {
 
     @Size(min = 20, max = 200)
+    @NotBlank
     private String annotation;
     @NotNull
     private Long category;
     @Size(min = 20, max = 7000)
+    @NotBlank
     private String description;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
@@ -29,6 +32,7 @@ public class NewEventDto {
     private Long participantLimit = 0L; // по умолчанию
     private Boolean requestModeration = true; // по умолчанию
     @Size(min = 3, max = 120)
+    @NotBlank
     private String title;
 
 }

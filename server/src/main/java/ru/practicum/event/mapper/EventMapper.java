@@ -2,12 +2,10 @@ package ru.practicum.event.mapper;
 
 import lombok.experimental.UtilityClass;
 import ru.practicum.category.model.Category;
-import ru.practicum.event.dto.EventFullDto;
-import ru.practicum.event.dto.EventShortDto;
+import ru.practicum.event.dto.*;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.state.EventState;
 import ru.practicum.category.mapper.CategoryMapper;
-import ru.practicum.event.dto.NewEventDto;
 import ru.practicum.user.mapper.UserMapper;
 import ru.practicum.user.model.User;
 
@@ -35,7 +33,7 @@ public class EventMapper {
         );
     }
 
-    public Event makeEventForUpdate(NewEventDto dto, User initiator, Category category, long eventId) {
+    public Event makeEventForUpdateByAdmin(UpdateEventAdminRequest dto, User initiator, Category category, long eventId) {
         return new Event(
                 eventId,
                 dto.getAnnotation(),
@@ -54,9 +52,29 @@ public class EventMapper {
         );
     }
 
+    public Event makeEventForUpdateByInitiator(UpdateEventUserRequest dto, User initiator, Category category, Event event) {
+        return new Event(
+                event.getId(),
+                dto.getAnnotation(),
+                category,
+                LocalDateTime.now(),
+                dto.getDescription(),
+                dto.getEventDate(),
+                initiator,
+                dto.getLocation(),
+                dto.getPaid(),
+                dto.getParticipantLimit(),
+                LocalDateTime.now(),
+                dto.getRequestModeration(),
+                event.getEventState(),
+                dto.getTitle()
+        );
+    }
+
     public EventFullDto makeEventFullDto(Event event, long confirmedRequest, long views) {
         return new EventFullDto(
                 event.getId(),
+                event.getAnnotation(),
                 CategoryMapper.makeCatDto(event.getCategory()),
                 confirmedRequest,
                 event.getCreatedOn(),

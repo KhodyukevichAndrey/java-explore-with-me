@@ -24,14 +24,14 @@ public interface EventStorage extends JpaRepository<Event, Long> {
     List<Event> findEventByAdminParameters(Integer[] usersId, String[] states, Integer[] categories,
                                            LocalDateTime rangeStart, LocalDateTime rangeEnd, Pageable p);
 
+
     @Query("select e " +
             "from Event e " +
-            "where (lower(e.annotation) like lower(concat('%', ?1, '%'))) or (lower(e.description)" +
-            " like lower(concat('%', ?1, '%'))) or (?1 is null) " +
-            "AND e.category.id IN ?2 or ?2 is null " +
-            "AND e.isPaid = ?3 or ?3 is null " +
-            "AND e.eventDate > ?4 or ?4 is null " +
-            "AND e.eventDate < ?5 or ?5 is null " +
+            "where e.eventState = 'PUBLISHED' " +
+            "AND ((lower(e.annotation) like concat('%', lower(?1), '%')) or (lower(e.description) like concat('%', lower(?1), '%')) or (?1 is null)) " +
+            "AND ((e.category.id IN ?2) or (?2 is null)) " +
+            "AND ((e.isPaid = ?3) or (?3 is null)) " +
+            "AND (e.eventDate between ?4 and ?5) " +
             "AND (?6 = true AND e.participantLimit > (select count(pr) from ParticipationRequest as pr " +
             "where e.id = pr.event.id)) or ?6 = false")
     List<Event> findEventByNotRegistrationUser(String text, Integer[] categories, Boolean isPaid, LocalDateTime rangeStart,

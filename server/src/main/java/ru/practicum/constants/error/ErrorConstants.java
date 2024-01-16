@@ -28,4 +28,6 @@ public class ErrorConstants {
     public static final String NOT_FOUND = "Данные на основании полученных параметров не найдены";
     public static final String CONFLICT = "Конфликт запроса с текущим состоянием сервера";
     public static final String INTERNAL_SERVER_ERROR = "Неожиданная ошибка сервера";
+    public static final String BAD_START_TIME = "дата и время на которые намечено событие не может быть раньше," +
+            " чем через два часа от текущего момента";
 }

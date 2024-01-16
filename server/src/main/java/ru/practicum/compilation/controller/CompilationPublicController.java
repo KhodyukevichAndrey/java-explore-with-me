@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.service.CompilationService;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
@@ -20,8 +20,8 @@ public class CompilationPublicController {
 
     @GetMapping
     public List<CompilationDto> getCompilations(@RequestParam Boolean pinned,
-                                                @RequestParam(defaultValue = "0") @Min(0) @Max(25) int from,
-                                                @RequestParam(defaultValue = "10") @Min(0) @Max(25) int size) {
+                                                @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                                @RequestParam(defaultValue = "10") @Positive int size) {
         log.debug("Получен запрос Get /compilations");
         return service.getCompilations(pinned, from, size);
     }

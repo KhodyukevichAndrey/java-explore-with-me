@@ -1,9 +1,6 @@
 package ru.practicum.event.service;
 
-import ru.practicum.event.dto.EventFullDto;
-import ru.practicum.event.dto.EventShortDto;
-import ru.practicum.event.dto.NewEventDto;
-import ru.practicum.event.dto.UpdateEventAdminRequest;
+import ru.practicum.event.dto.*;
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.request.dto.ParticipationRequestDto;
@@ -19,7 +16,7 @@ public interface EventService {
 
     EventFullDto getCurrentInitiatorEvent(long userId, long eventId);
 
-    EventFullDto updateEventByInitiator(long userId, long eventId, NewEventDto dto);
+    EventFullDto updateEventByInitiator(long userId, long eventId, UpdateEventUserRequest dto);
 
     List<ParticipationRequestDto> getEventsParticipationRequests(long userId, long eventId);
 

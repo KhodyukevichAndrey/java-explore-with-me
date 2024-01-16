@@ -7,17 +7,15 @@ import lombok.NoArgsConstructor;
 import ru.practicum.event.model.Location;
 import ru.practicum.event.state.StateAction;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UpdateEventAdminRequest {
+public class UpdateEventUserRequest {
 
     @Size(min = 20, max = 200)
-    @NotBlank
     private String annotation;
     private Long category;
     @Size(min = 20, max = 7000)

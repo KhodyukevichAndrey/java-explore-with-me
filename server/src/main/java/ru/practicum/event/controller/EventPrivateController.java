@@ -6,14 +6,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.NewEventDto;
+import ru.practicum.event.dto.UpdateEventUserRequest;
 import ru.practicum.event.service.EventService;
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.request.dto.ParticipationRequestDto;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
@@ -26,8 +27,8 @@ public class EventPrivateController {
 
     @GetMapping
     public List<EventFullDto> getInitiatorEvents(@PathVariable long userId,
-                                            @RequestParam(defaultValue = "0") @Min(0) @Max(25) int from,
-                                            @RequestParam(defaultValue = "10") @Min(0) @Max(25) int size) {
+                                                 @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                                 @RequestParam(defaultValue = "10") @Positive int size) {
         log.debug("Получен запрос Get /users/{userId}/events");
         return service.getInitiatorEvents(userId, from, size);
     }
@@ -50,7 +51,7 @@ public class EventPrivateController {
     @PatchMapping("/{eventId}")
     public EventFullDto updateEventByInitiator(@PathVariable long userId,
                                     @PathVariable long eventId,
-                                    @RequestBody @Valid NewEventDto dto) {
+                                    @RequestBody @Valid UpdateEventUserRequest dto) {
         log.debug("Получен запрос Patch /users/{userId}/events/{eventId}");
         return service.updateEventByInitiator(userId, eventId, dto);
     }

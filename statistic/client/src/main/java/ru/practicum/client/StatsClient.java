@@ -33,7 +33,7 @@ public class StatsClient {
     }
 
     public ResponseEntity<Object> postEndpointHit(EndpointHitDto dto) {
-        return makeAndSendRequest(HttpMethod.POST, "/hit", null, dto);
+        return makeAndSendRequest(HttpMethod.POST, "http://localhost:9090/hit", null, dto);
     }
 
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, @Nullable String[] uris, @Nullable Boolean unique) {

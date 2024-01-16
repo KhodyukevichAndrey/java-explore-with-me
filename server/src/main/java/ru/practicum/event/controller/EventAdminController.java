@@ -9,8 +9,8 @@ import ru.practicum.event.dto.UpdateEventAdminRequest;
 import ru.practicum.event.service.EventService;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,8 +30,8 @@ public class EventAdminController {
                                         @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
                                         @RequestParam
                                         @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
-                                        @RequestParam(defaultValue = "0") @Min(0) @Max(25) int from,
-                                        @RequestParam(defaultValue = "10") @Min(0) @Max(25) int size) {
+                                        @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                        @RequestParam(defaultValue = "10") @Positive int size) {
         log.debug("Получен запрос Get /admin/events");
         return service.getEventByAdminFiltering(users, states, categories, rangeStart, rangeEnd, from, size);
     }

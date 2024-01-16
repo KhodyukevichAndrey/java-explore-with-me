@@ -67,14 +67,17 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto updateCompilation(long compilationId, UpdateCompilationRequest dto) {
-        getCompilation(compilationId);
-        Compilation compilation = CompilationMapper.makeCompilation(dto);
-        addEventsToCompilation(compilation, dto.getEventsId());
-        compilationStorage.save(compilation);
-        Map<Long, Long> confirmedRequestByEventId = getConfirmedRequests(compilation.getEvents());
-        Map<Long, Long> viewsByEventId = getViews(compilation.getEvents());
+        Compilation compilation = getCompilation(compilationId);
+        completeFields(dto, compilation);
+        Compilation compilationForUpdate = CompilationMapper.makeCompilationForUpdate(dto, compilationId);
+        addEventsToCompilation(compilationForUpdate, dto.getEventsId());
 
-        return CompilationMapper.makeDto(compilation, makeEventShort(compilation.getEvents(),
+        compilationStorage.save(compilationForUpdate);
+
+        Map<Long, Long> confirmedRequestByEventId = getConfirmedRequests(compilationForUpdate.getEvents());
+        Map<Long, Long> viewsByEventId = getViews(compilationForUpdate.getEvents());
+
+        return CompilationMapper.makeDto(compilationForUpdate, makeEventShort(compilationForUpdate.getEvents(),
                 confirmedRequestByEventId, viewsByEventId));
     }
 
@@ -178,8 +181,21 @@ public class CompilationServiceImpl implements CompilationService {
                 .collect(toList());
     }
 
+    private UpdateCompilationRequest completeFields(UpdateCompilationRequest request, Compilation compilation) {
+        if (request.getEventsId().isEmpty()) {
+            request.setEventsId(compilation.getEvents().stream().map(Event::getId).collect(toList()));
+        }
+        if (request.getPinned() == null) {
+            request.setPinned(compilation.isPinned());
+        }
+        if (request.getTitle() == null) {
+            request.setTitle(compilation.getTitle());
+        }
+        return request;
+    }
+
     private List<EndpointHitStatsDto> getStatsDto(LocalDateTime rangeStart, LocalDateTime rangeEnd, String[] urisArray,
-                                                  boolean unique) { // костыль :/
+                                                  boolean unique) {
         ResponseEntity<Object> responseEntity = statsClient.getStats(rangeStart, rangeEnd, urisArray, unique);
         Object body = responseEntity.getBody();
 
