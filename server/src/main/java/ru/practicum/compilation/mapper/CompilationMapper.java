@@ -7,8 +7,8 @@ import ru.practicum.compilation.dto.UpdateCompilationRequest;
 import ru.practicum.compilation.model.Compilation;
 import ru.practicum.event.dto.EventShortDto;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @UtilityClass
 public class CompilationMapper {
@@ -16,8 +16,8 @@ public class CompilationMapper {
     public Compilation makeCompilation(NewCompilationDto dto) {
         return new Compilation(
                 0,
-                new ArrayList<>(),
-                dto.isPinned(),
+                new HashSet<>(),
+                dto.getPinned(),
                 dto.getTitle()
         );
     }
@@ -25,17 +25,17 @@ public class CompilationMapper {
     public Compilation makeCompilationForUpdate(UpdateCompilationRequest request, long compilationId) {
         return new Compilation(
                 compilationId,
-                new ArrayList<>(),
+                new HashSet<>(),
                 request.getPinned(),
                 request.getTitle()
         );
     }
 
-    public CompilationDto makeDto(Compilation compilation, List<EventShortDto> eventShortDto) {
+    public CompilationDto makeDto(Compilation compilation, Set<EventShortDto> eventShortDto) {
         return new CompilationDto(
                 eventShortDto,
                 compilation.getId(),
-                compilation.isPinned(),
+                compilation.getPinned(),
                 compilation.getTitle()
         );
     }

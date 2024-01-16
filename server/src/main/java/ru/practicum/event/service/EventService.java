@@ -1,6 +1,7 @@
 package ru.practicum.event.service;
 
 import ru.practicum.event.dto.*;
+import ru.practicum.event.state.EventState;
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.request.dto.ParticipationRequestDto;
@@ -23,7 +24,7 @@ public interface EventService {
     EventRequestStatusUpdateResult confirmEventsParticipationRequests(long userId, long eventId,
                                                                       EventRequestStatusUpdateRequest requests);
 
-    List<EventFullDto> getEventByAdminFiltering(Integer[] users, String[] states, Integer[] categories,
+    List<EventFullDto> getEventByAdminFiltering(List<Long> users, List<EventState> states, List<Long> categories,
                                                 LocalDateTime rangeStart, LocalDateTime rangeEnd, int from, int size);
 
     EventFullDto updateEventStatusByAdmin(long eventId, UpdateEventAdminRequest dto);

@@ -29,7 +29,7 @@ public interface EndpointHitStorage extends JpaRepository<EndpointHit, Long> {
             "from EndpointHit eh " +
             "where eh.dateTime BETWEEN ?1 AND ?2 " +
             "group by eh.uri, eh.app " +
-            "order by count(eh.ip) desc")
+            "order by count(distinct eh.ip) desc")
     List<EndpointHitStatsDto> findAllEndpointHitForUnique(LocalDateTime start, LocalDateTime end);
 
     @Query("select new ru.practicum.dto.EndpointHitStatsDto(eh.app, eh.uri, count(distinct eh.ip)) " +
@@ -37,6 +37,6 @@ public interface EndpointHitStorage extends JpaRepository<EndpointHit, Long> {
             "where eh.dateTime BETWEEN ?1 AND ?2 " +
             "AND eh.uri in ?3 " +
             "group by eh.uri, eh.app " +
-            "order by count(eh.ip) desc")
+            "order by count(distinct eh.ip) desc")
     List<EndpointHitStatsDto> findEndpointHitForUriInAndUnique(LocalDateTime start, LocalDateTime end, String[] uris);
 }

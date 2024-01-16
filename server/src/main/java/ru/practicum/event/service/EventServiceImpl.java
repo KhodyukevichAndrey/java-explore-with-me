@@ -71,6 +71,9 @@ public class EventServiceImpl implements EventService {
     public EventFullDto addEvent(long userId, NewEventDto newEventDto) {
         Category category = getCat(newEventDto.getCategory());
         User initiator = getUser(userId);
+        if (newEventDto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new ConflictException(BAD_START_TIME);
+        }
         Event event = EventMapper.makeEvent(newEventDto, initiator, category);
 
         return EventMapper.makeEventFullDto(eventStorage.save(event), 0, 0);
@@ -176,12 +179,12 @@ public class EventServiceImpl implements EventService {
     // For EventAdminController
 
     @Override
-    public List<EventFullDto> getEventByAdminFiltering(Integer[] users, String[] states, Integer[] categories,
+    public List<EventFullDto> getEventByAdminFiltering(List<Long> users, List<EventState> states, List<Long> categories,
                                                        LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                        int from, int size) {
 
         List<Event> events = eventStorage.findEventByAdminParameters(users, states, categories, rangeStart,
-                rangeEnd, PageRequest.of(from / size, size, SortConstants.SORT_BY_EVENT_DATE_ASC));
+                rangeEnd, PageRequest.of(from / size, size, SortConstants.SORT_BY_ID_ASC));
         Map<Long, Long> confirmed = getConfirmedRequests(events);
         Map<Long, Long> views = getViews(events);
 
@@ -212,15 +215,16 @@ public class EventServiceImpl implements EventService {
         Event eventForUpdate = EventMapper.makeEventForUpdateByAdmin(dto, event.getInitiator(), event.getCategory(), eventId);
         if (stateAction.equals(StateAction.PUBLISH_EVENT)) {
             eventForUpdate.setEventState(EventState.PUBLISHED);
+            eventForUpdate.setPublishedOn(LocalDateTime.now());
             eventStorage.save(eventForUpdate);
-            return makeEventFull(List.of(eventForUpdate), confirmed, views).get(0);
         } else if (stateAction.equals(StateAction.REJECT_EVENT)) {
             eventForUpdate.setEventState(EventState.CANCELED);
             eventStorage.save(eventForUpdate);
-            return makeEventFull(List.of(eventForUpdate), confirmed, views).get(0);
         } else {
             throw new NotAvailableException("Недопустимый статус события");
         }
+
+        return makeEventFull(List.of(eventForUpdate), confirmed, views).get(0);
     }
 
     // For EventPublicController

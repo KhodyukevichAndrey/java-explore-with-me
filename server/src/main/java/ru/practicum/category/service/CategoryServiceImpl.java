@@ -41,7 +41,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public CategoryDto updateCategory(long catId, NewCategoryDto newCategoryDto) {
         getCat(catId);
-        Category category = storage.save(CategoryMapper.makeCat(newCategoryDto));
+        Category category = storage.save(CategoryMapper.makeUpdateForCategory(newCategoryDto, catId));
         return CategoryMapper.makeCatDto(category);
     }
 

@@ -9,6 +9,8 @@ import ru.practicum.compilation.dto.NewCompilationDto;
 import ru.practicum.compilation.dto.UpdateCompilationRequest;
 import ru.practicum.compilation.service.CompilationService;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/admin/compilations")
 @Slf4j
@@ -19,7 +21,7 @@ public class CompilationAdminController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CompilationDto addCompilation(@RequestBody NewCompilationDto dto) {
+    public CompilationDto addCompilation(@RequestBody @Valid NewCompilationDto dto) {
         log.debug("Получен запрос Post /admin/compilations");
         return service.addCompilation(dto);
     }

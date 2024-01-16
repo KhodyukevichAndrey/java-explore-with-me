@@ -3,10 +3,13 @@ package ru.practicum.event.storage;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.practicum.event.model.Event;
+import ru.practicum.event.state.EventState;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 public interface EventStorage extends JpaRepository<Event, Long> {
 
@@ -16,26 +19,36 @@ public interface EventStorage extends JpaRepository<Event, Long> {
 
     @Query("select e " +
             "from Event e " +
-            "where e.id IN ?1 or ?1 is null " +
-            "AND e.eventState IN ?2 or ?2 is null " +
-            "AND e.category.id IN ?3 or ?3 is null " +
-            "AND e.eventDate > ?4 or ?4 is null " +
-            "AND e.eventDate < ?5 or ?5 is null")
-    List<Event> findEventByAdminParameters(Integer[] usersId, String[] states, Integer[] categories,
-                                           LocalDateTime rangeStart, LocalDateTime rangeEnd, Pageable p);
+            "where (e.initiator.id IN :usersId or :usersId is null) " +
+            "AND (e.eventState IN :states or :states is null) " +
+            "AND (e.category.id IN :categories or :categories is null) " +
+            "AND (e.eventDate < cast(:rangeEnd AS date) or cast(:rangeStart AS date) is null) " +
+            "AND (e.eventDate > cast(:rangeStart AS date) or cast(:rangeEnd AS date) is null) ")
+    List<Event> findEventByAdminParameters(@Param("usersId") List<Long> usersId,
+                                           @Param("states") List<EventState> states,
+                                           @Param("categories") List<Long> categories,
+                                           @Param("rangeStart") LocalDateTime rangeStart,
+                                           @Param("rangeEnd") LocalDateTime rangeEnd,
+                                           Pageable p);
 
 
     @Query("select e " +
             "from Event e " +
             "where e.eventState = 'PUBLISHED' " +
-            "AND ((lower(e.annotation) like concat('%', lower(?1), '%')) or (lower(e.description) like concat('%', lower(?1), '%')) or (?1 is null)) " +
-            "AND ((e.category.id IN ?2) or (?2 is null)) " +
-            "AND ((e.isPaid = ?3) or (?3 is null)) " +
-            "AND (e.eventDate between ?4 and ?5) " +
-            "AND (?6 = true AND e.participantLimit > (select count(pr) from ParticipationRequest as pr " +
-            "where e.id = pr.event.id)) or ?6 = false")
-    List<Event> findEventByNotRegistrationUser(String text, Integer[] categories, Boolean isPaid, LocalDateTime rangeStart,
-                                               LocalDateTime rangeEnd, Boolean onlyAvailable, Pageable p);
+            "AND ((lower(e.annotation) like concat('%', lower(:text), '%')) or (lower(e.description) like concat('%', lower(:text), '%')) or (:text is null)) " +
+            "AND ((e.category.id IN :categories) or (:categories is null)) " +
+            "AND ((e.isPaid = :isPaid) or (:isPaid is null)) " +
+            "AND (e.eventDate < cast(:rangeEnd AS date) or cast(:rangeStart AS date) is null) " +
+            "AND (e.eventDate > cast(:rangeStart AS date) or cast(:rangeEnd AS date) is null) " +
+            "AND (:onlyAvailable = true AND e.participantLimit > (select count(pr) from ParticipationRequest as pr " +
+            "where e.id = pr.event.id)) or :onlyAvailable = false ")
+    List<Event> findEventByNotRegistrationUser(@Param("text") String text,
+                                               @Param("categories") Integer[] categories,
+                                               @Param("isPaid") Boolean isPaid,
+                                               @Param("rangeStart") LocalDateTime rangeStart,
+                                               @Param("rangeEnd") LocalDateTime rangeEnd,
+                                               @Param("onlyAvailable") Boolean onlyAvailable,
+                                               Pageable p);
 
-    List<Event> findEventByIdIn(List<Long> ids);
+    Set<Event> findEventByIdIn(Set<Long> ids);
 }

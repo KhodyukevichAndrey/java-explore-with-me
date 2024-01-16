@@ -15,6 +15,13 @@ public class CategoryMapper {
         );
     }
 
+    public Category makeUpdateForCategory(NewCategoryDto categoryDto, long catId) {
+        return new Category(
+                catId,
+                categoryDto.getName()
+        );
+    }
+
     public CategoryDto makeCatDto(Category category) {
         return new CategoryDto(
                 category.getId(),

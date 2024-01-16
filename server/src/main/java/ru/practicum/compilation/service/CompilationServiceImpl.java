@@ -46,13 +46,23 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto addCompilation(NewCompilationDto dto) {
-        Compilation compilation = compilationStorage
-                .save(addEventsToCompilation(CompilationMapper.makeCompilation(dto), dto.getEventsId()));
+        Compilation compilation = CompilationMapper.makeCompilation(dto);
+        Map<Long, Long> confirmedRequestByEventId = new HashMap<>();
+        Map<Long, Long> viewsByEventId = new HashMap<>();
 
-        Map<Long, Long> confirmedRequestByEventId = getConfirmedRequests(compilation.getEvents());
-        Map<Long, Long> viewsByEventId = getViews(compilation.getEvents());
+        if (dto.getEventsId() != null) {
+            addEventsToCompilation(compilation, dto.getEventsId());
+            confirmedRequestByEventId = getConfirmedRequests(compilation.getEvents());
+            viewsByEventId = getViews(compilation.getEvents());
+        } else {
+            compilation.setEvents(Collections.emptySet());
+        }
 
-        return CompilationMapper.makeDto(compilation, makeEventShort(compilation.getEvents(),
+        if (compilation.getPinned() == null) {
+            compilation.setPinned(false);
+        }
+
+        return CompilationMapper.makeDto(compilationStorage.save(compilation), makeEventShort(compilation.getEvents(),
                 confirmedRequestByEventId, viewsByEventId));
     }
 
@@ -125,17 +135,14 @@ public class CompilationServiceImpl implements CompilationService {
                 .orElseThrow(() -> new EntityNotFoundException(WRONG_EVENT_ID));
     }
 
-    private Compilation addEventsToCompilation(Compilation compilation, List<Long> eventsId) {
-        if (eventsId != null && !eventsId.isEmpty()) {
-            for (Long id : eventsId) {
-                Event event = getEvent(id);
-                compilation.getEvents().add(event);
-            }
+    private Compilation addEventsToCompilation(Compilation compilation, Set<Long> eventsId) {
+        if (!eventsId.isEmpty()) {
+            compilation.setEvents(eventStorage.findEventByIdIn(eventsId));
         }
         return compilation;
     }
 
-    private Map<Long, Long> getConfirmedRequests(List<Event> events) {
+    private Map<Long, Long> getConfirmedRequests(Set<Event> events) {
         List<Long> eventsIds = events.stream()
                 .map(Event::getId)
                 .collect(toList());
@@ -145,7 +152,7 @@ public class CompilationServiceImpl implements CompilationService {
                 .collect(groupingBy(pr -> pr.getEvent().getId(), Collectors.counting()));
     }
 
-    private Map<Long, Long> getViews(List<Event> events) {
+    private Map<Long, Long> getViews(Set<Event> events) {
         List<Event> publishedEvents = events.stream()
                 .filter(event -> event.getEventState() == EventState.PUBLISHED)
                 .collect(toList());
@@ -172,21 +179,24 @@ public class CompilationServiceImpl implements CompilationService {
                         EndpointHitStatsDto::getHits));
     }
 
-    private List<EventShortDto> makeEventShort(List<Event> events, Map<Long, Long> confirmed, Map<Long, Long> views) {
+    private Set<EventShortDto> makeEventShort(Set<Event> events, Map<Long, Long> confirmed, Map<Long, Long> views) {
+        if (events.isEmpty()) {
+            return Collections.emptySet();
+        }
         return events.stream()
                 .map(event ->
                         EventMapper.makeEventShortDto(event,
                                 confirmed.getOrDefault(event.getId(), 0L),
                                 views.getOrDefault(event.getId(), 0L)))
-                .collect(toList());
+                .collect(Collectors.toSet());
     }
 
     private UpdateCompilationRequest completeFields(UpdateCompilationRequest request, Compilation compilation) {
         if (request.getEventsId().isEmpty()) {
-            request.setEventsId(compilation.getEvents().stream().map(Event::getId).collect(toList()));
+            request.setEventsId(compilation.getEvents().stream().map(Event::getId).collect(Collectors.toSet()));
         }
         if (request.getPinned() == null) {
-            request.setPinned(compilation.isPinned());
+            request.setPinned(compilation.getPinned());
         }
         if (request.getTitle() == null) {
             request.setTitle(compilation.getTitle());
