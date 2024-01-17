@@ -35,8 +35,8 @@ public interface EventStorage extends JpaRepository<Event, Long> {
     @Query("select e " +
             "from Event e " +
             "where e.eventState = 'PUBLISHED' " +
-            "AND (lower(e.annotation) like lower(concat('%', :text, '%'))) " +
-            "or (lower(e.description) like lower(concat('%', :text, '%'))) " +
+            "AND (lower(e.annotation) like lower(concat('%', :text, '%')) " +
+            "or lower(e.description) like lower(concat('%', :text, '%'))) " +
             "or (:text is null) " +
             "AND ((e.category.id IN :categories) or (:categories is null)) " +
             "AND ((e.isPaid = :isPaid) or (:isPaid is null)) " +
