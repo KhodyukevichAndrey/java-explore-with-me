@@ -1,5 +1,6 @@
 package ru.practicum.client;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
@@ -23,6 +24,7 @@ public class StatsClient {
     private final RestTemplate rest;
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    @Autowired
     public StatsClient(@Value("{explore-with-me-statistic.server.url}") String serverUrl) {
         this.rest = new RestTemplateBuilder()
                 .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
