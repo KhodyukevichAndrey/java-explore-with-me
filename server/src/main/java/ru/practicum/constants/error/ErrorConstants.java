@@ -32,5 +32,6 @@ public class ErrorConstants {
             " чем через два часа от текущего момента";
     public static final String EVENT_CATEGORY_EXIST = "Удаление категории, для которой существует событие - недопустимо";
     public static final String WRONG_EVENT_STATUS_FOR_CONFIRM = "Согласование события из данного статуса - недопустимо";
+    public static final String WRONG_CONDITION = "Дата начала не должна быть позже даты окончания";
     public static final int ID_START_FROM = 8;
 }

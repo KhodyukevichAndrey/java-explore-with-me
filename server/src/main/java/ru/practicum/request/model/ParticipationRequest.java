@@ -6,6 +6,7 @@ import ru.practicum.request.status.Status;
 import ru.practicum.user.model.User;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -18,6 +19,7 @@ public class ParticipationRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+    private LocalDateTime created;
     @ManyToOne
     @ToString.Exclude
     @JoinColumn(name = "user_id")

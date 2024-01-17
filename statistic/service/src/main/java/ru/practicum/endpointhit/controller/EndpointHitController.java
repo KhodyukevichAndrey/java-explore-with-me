@@ -30,7 +30,7 @@ public class EndpointHitController {
     @GetMapping("/stats")
     public List<EndpointHitStatsDto> getStats(@RequestParam
                                               @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
-                                              @RequestParam(name = "end")
+                                              @RequestParam
                                               @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
                                               @RequestParam(name = "uris", required = false) String[] uris,
                                               @RequestParam(name = "unique", defaultValue = "false") Boolean unique) {

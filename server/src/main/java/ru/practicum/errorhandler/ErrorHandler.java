@@ -1,6 +1,7 @@
 package ru.practicum.errorhandler;
 
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -9,8 +10,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.EntityNotFoundException;
+import ru.practicum.exception.NotAvailableException;
 
-import javax.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
@@ -20,9 +21,25 @@ import static ru.practicum.constants.error.ErrorConstants.*;
 @Slf4j
 public class ErrorHandler {
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleConstraintViolationException(final ConstraintViolationException e) {
+        log.debug("Получен статус 409 Conflict {}", e.getMessage(), e);
+        return new ApiError(Arrays.toString(e.getStackTrace()), e.getMessage(), CONFLICT,
+                "CONFLICT", LocalDateTime.now());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleMethodArgumentException(final MethodArgumentNotValidException e) {
+        log.debug("Получен статус 400 Bad Request {}", e.getMessage(), e);
+        return new ApiError(Arrays.toString(e.getStackTrace()), e.getMessage(), BAD_REQUEST,
+                "BAD_REQUEST", LocalDateTime.now());
+    }
+
+    @ExceptionHandler(NotAvailableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleNotAvailableException(final RuntimeException e) {
         log.debug("Получен статус 400 Bad Request {}", e.getMessage(), e);
         return new ApiError(Arrays.toString(e.getStackTrace()), e.getMessage(), BAD_REQUEST,
                 "BAD_REQUEST", LocalDateTime.now());
@@ -47,14 +64,6 @@ public class ErrorHandler {
     @ExceptionHandler(ConflictException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleConflictException(final RuntimeException e) {
-        log.debug("Получен статус 409 Conflict {}", e.getMessage(), e);
-        return new ApiError(Arrays.toString(e.getStackTrace()), e.getMessage(), CONFLICT,
-                "CONFLICT", LocalDateTime.now());
-    }
-
-    @ExceptionHandler(ConstraintViolationException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError handleConstraintViolationException(final ConstraintViolationException e) {
         log.debug("Получен статус 409 Conflict {}", e.getMessage(), e);
         return new ApiError(Arrays.toString(e.getStackTrace()), e.getMessage(), CONFLICT,
                 "CONFLICT", LocalDateTime.now());

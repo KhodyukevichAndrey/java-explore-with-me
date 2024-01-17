@@ -23,6 +23,7 @@ import ru.practicum.category.storage.CategoryStorage;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.state.StateAction;
 import ru.practicum.exception.ConflictException;
+import ru.practicum.exception.NotAvailableException;
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.request.dto.ParticipationRequestDto;
@@ -75,7 +76,7 @@ public class EventServiceImpl implements EventService {
         if (newEventDto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
             throw new ConflictException(BAD_START_TIME);
         }
-        Event event = EventMapper.makeEvent(newEventDto, initiator, category);
+        Event event = eventStorage.save(EventMapper.makeEvent(newEventDto, initiator, category));
 
         return EventMapper.makeEventFullDto(eventStorage.save(event), 0, 0);
     }
@@ -138,7 +139,7 @@ public class EventServiceImpl implements EventService {
         getUser(userId);
         getEvent(eventId);
 
-        List<ParticipationRequest> requests = requestStorage.findParticipationRequestByEvent(eventId);
+        List<ParticipationRequest> requests = requestStorage.findParticipationRequestByEventId(eventId);
         return requests.stream()
                 .map(RequestMapper::makeRequestDto)
                 .collect(Collectors.toList());
@@ -231,11 +232,11 @@ public class EventServiceImpl implements EventService {
                                                                          Boolean onlyAvailable, String sort, int from, int size) {
         Sort currentSort;
         if (rangeStart != null && rangeEnd != null && (rangeStart.isAfter(rangeEnd))) {
-            throw new ConflictException("WRONG CONDITION");
+            throw new NotAvailableException(WRONG_CONDITION);
         }
 
         if (sort != null && sort.equalsIgnoreCase("EVENT_DATE")) {
-            currentSort = SortConstants.SORT_BY_EVENT_DATE_ASC;
+            currentSort = SortConstants.SORT_BY_EVENT_DATE_DESC;
         } else if (sort != null && sort.equalsIgnoreCase("VIEWS")) {
             currentSort = SortConstants.SORT_BY_VIEWS_DESC;
         } else {

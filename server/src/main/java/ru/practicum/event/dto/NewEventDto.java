@@ -31,9 +31,12 @@ public class NewEventDto {
     private LocalDateTime eventDate;
     @NotNull
     private Location location;
-    private Boolean paid;
-    private Long participantLimit;
-    private Boolean requestModeration;
+    @NotNull
+    private Boolean paid = false; //default
+    @NotNull
+    private Long participantLimit = 0L; //default
+    @NotNull
+    private Boolean requestModeration = true; //default
     @Size(min = 3, max = 120)
     @NotBlank
     private String title;

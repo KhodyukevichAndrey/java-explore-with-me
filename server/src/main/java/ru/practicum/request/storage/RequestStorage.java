@@ -13,7 +13,7 @@ public interface RequestStorage extends JpaRepository<ParticipationRequest, Long
 
     List<ParticipationRequest> findAllByParticipantId(long userId);
 
-    List<ParticipationRequest> findParticipationRequestByEvent(long eventId);
+    List<ParticipationRequest> findParticipationRequestByEventId(long eventId);
 
     List<ParticipationRequest> findParticipationRequestByIdIn(Long[] ids);
 
