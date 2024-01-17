@@ -53,9 +53,8 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = getCat(catId);
 
         category.setName(newCategoryDto.getName());
-        storage.save(category);
 
-        return CategoryMapper.makeCatDto(category);
+        return CategoryMapper.makeCatDto(storage.save(category));
     }
 
     @Override

@@ -106,10 +106,10 @@ public class EventServiceImpl implements EventService {
             event.setCategory(getCat(dto.getCategory()));
         }
 
+        completeFieldsByUserUpdate(dto, event);
+
         Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
         Map<Long, Long> views = getViews(List.of(event));
-
-        completeFieldsByUserUpdate(dto, event);
 
         if (event.getEventState().equals(EventState.PUBLISHED)) {
             throw new ConflictException(EVENT_NOT_AVAILABLE_STATE);
@@ -198,10 +198,11 @@ public class EventServiceImpl implements EventService {
         Event event = getEvent(eventId);
         LocalDateTime eventDate = event.getEventDate();
         StateAction stateAction = dto.getStateAction();
-        Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
-        Map<Long, Long> views = getViews(List.of(event));
 
         completeFieldsByAdminUpdate(dto, event);
+
+        Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
+        Map<Long, Long> views = getViews(List.of(event));
 
         if (!eventDate.isAfter(LocalDateTime.now().plusHours(1L))) {
             throw new ConflictException(ErrorConstants.EVENT_START_TIME);

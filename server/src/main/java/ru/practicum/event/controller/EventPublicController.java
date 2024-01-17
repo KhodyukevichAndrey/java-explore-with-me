@@ -41,7 +41,7 @@ public class EventPublicController {
         log.debug("Получен запрос Get /events");
         client.postEndpointHit(new EndpointHitDto(
                 "ewm-main-service",
-                "/events",
+                request.getRequestURI(),
                 request.getRemoteAddr(),
                 LocalDateTime.now()
         ));
@@ -54,7 +54,7 @@ public class EventPublicController {
         log.debug("Получен запрос Get /events/{id}");
         client.postEndpointHit(new EndpointHitDto(
                 "ewm-main-service",
-                "/events/" + id,
+                request.getRequestURI(),
                 request.getRemoteAddr(),
                 LocalDateTime.now()
         ));
