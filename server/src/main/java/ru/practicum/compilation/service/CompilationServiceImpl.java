@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
+import static ru.practicum.constants.error.ErrorConstants.ID_START_FROM;
 import static ru.practicum.constants.error.ErrorConstants.WRONG_COMPILATION_ID;
 
 @Service
@@ -41,6 +42,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final EventStorage eventStorage;
     private final RequestStorage requestStorage;
     private final StatsClient statsClient;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -178,7 +180,7 @@ public class CompilationServiceImpl implements CompilationService {
                 true);
 
         return stats.stream()
-                .collect(toMap(endpoint -> Long.parseLong(endpoint.getUri().substring(9)),
+                .collect(toMap(endpoint -> Long.parseLong(endpoint.getUri().substring(ID_START_FROM)),
                         EndpointHitStatsDto::getHits));
     }
 
@@ -197,13 +199,12 @@ public class CompilationServiceImpl implements CompilationService {
     private List<EndpointHitStatsDto> getStatsDto(LocalDateTime rangeStart, LocalDateTime rangeEnd, String[] urisArray,
                                                   boolean unique) {
         ResponseEntity<Object> responseEntity = statsClient.getStats(rangeStart, rangeEnd, urisArray, unique);
-        Object body = responseEntity.getBody();
 
-        if (body == null) {
+        if (responseEntity.getBody() == null) {
             return Collections.emptyList();
         }
 
-        return new ObjectMapper().convertValue(body, new TypeReference<>() {
+        return objectMapper.convertValue(responseEntity.getBody(), new TypeReference<>() {
         });
     }
 }

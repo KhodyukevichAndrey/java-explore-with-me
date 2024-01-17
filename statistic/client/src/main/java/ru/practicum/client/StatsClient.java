@@ -11,8 +11,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.dto.EndpointHitDto;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -37,12 +35,9 @@ public class StatsClient {
     }
 
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, @Nullable String[] uris, @Nullable Boolean unique) {
-        String encodedStart = URLEncoder.encode(start.format(FORMATTER), StandardCharsets.UTF_8);
-        String encodedEnd = URLEncoder.encode(end.format(FORMATTER), StandardCharsets.UTF_8);
-
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("start", encodedStart);
-        parameters.put("end", encodedEnd);
+        parameters.put("start", start.format(FORMATTER));
+        parameters.put("end", end.format(FORMATTER));
 
         StringBuilder builder = new StringBuilder();
         builder.append("http://localhost:9090/stats?start={start}&end={end}");
@@ -54,7 +49,7 @@ public class StatsClient {
 
         if (unique != null) {
             parameters.put("unique", unique);
-            builder.append("?unique={unique}");
+            builder.append("&unique={unique}");
         }
 
         return makeAndSendRequest(HttpMethod.GET, builder.toString(), parameters, null);

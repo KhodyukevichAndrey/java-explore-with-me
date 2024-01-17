@@ -206,7 +206,7 @@ public class EventServiceImpl implements EventService {
             throw new ConflictException(ErrorConstants.EVENT_START_TIME);
         }
         if (!event.getEventState().equals(EventState.PENDING)) {
-            throw new ConflictException(EVENT_NOT_AVAILABLE_STATE);
+            throw new ConflictException(WRONG_EVENT_STATUS_FOR_CONFIRM);
         }
 
         if (stateAction != null) {
@@ -460,7 +460,7 @@ public class EventServiceImpl implements EventService {
                 true);
 
         return stats.stream()
-                .collect(toMap(endpoint -> Long.parseLong(endpoint.getUri().substring(9)),
+                .collect(toMap(endpoint -> Long.parseLong(endpoint.getUri().substring(ID_START_FROM)),
                         EndpointHitStatsDto::getHits));
     }
 
@@ -485,13 +485,14 @@ public class EventServiceImpl implements EventService {
     private List<EndpointHitStatsDto> getStatsDto(LocalDateTime rangeStart, LocalDateTime rangeEnd, String[] urisArray,
                                                   boolean unique) {
         ResponseEntity<Object> responseEntity = statsClient.getStats(rangeStart, rangeEnd, urisArray, unique);
+
+        Object object = responseEntity.getBody();
+
         if (responseEntity.getBody() == null) {
             return Collections.emptyList();
         }
-        List<EndpointHitStatsDto> statsDtos = objectMapper.convertValue(responseEntity.getBody(), new TypeReference<>() {
-        });
 
-        return objectMapper.convertValue(responseEntity.getBody(), new TypeReference<List<EndpointHitStatsDto>>() {
+        return objectMapper.convertValue(responseEntity.getBody(), new TypeReference<>() {
         });
     }
 }
