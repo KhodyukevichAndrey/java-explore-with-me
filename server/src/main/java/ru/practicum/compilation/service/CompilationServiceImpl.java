@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
 import static ru.practicum.constants.error.ErrorConstants.WRONG_COMPILATION_ID;
-import static ru.practicum.constants.error.ErrorConstants.WRONG_EVENT_ID;
 
 @Service
 @RequiredArgsConstructor
@@ -50,8 +49,8 @@ public class CompilationServiceImpl implements CompilationService {
         Map<Long, Long> confirmedRequestByEventId = new HashMap<>();
         Map<Long, Long> viewsByEventId = new HashMap<>();
 
-        if (dto.getEventsId() != null) {
-            addEventsToCompilation(compilation, dto.getEventsId());
+        if (dto.getEvents() != null) {
+            addEventsToCompilation(compilation, new HashSet<>(dto.getEvents()));
             confirmedRequestByEventId = getConfirmedRequests(compilation.getEvents());
             viewsByEventId = getViews(compilation.getEvents());
         } else {
@@ -78,16 +77,25 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     public CompilationDto updateCompilation(long compilationId, UpdateCompilationRequest dto) {
         Compilation compilation = getCompilation(compilationId);
-        completeFields(dto, compilation);
-        Compilation compilationForUpdate = CompilationMapper.makeCompilationForUpdate(dto, compilationId);
-        addEventsToCompilation(compilationForUpdate, dto.getEventsId());
 
-        compilationStorage.save(compilationForUpdate);
+        if (dto.getPinned() != null) {
+            compilation.setPinned(false);
+        }
+        if (dto.getEvents() == null || dto.getEvents().isEmpty()) {
+            compilation.setEvents(Collections.emptySet());
+        } else {
+            addEventsToCompilation(compilation, dto.getEvents());
+        }
+        if (dto.getTitle() != null) {
+            compilation.setTitle(dto.getTitle());
+        }
 
-        Map<Long, Long> confirmedRequestByEventId = getConfirmedRequests(compilationForUpdate.getEvents());
-        Map<Long, Long> viewsByEventId = getViews(compilationForUpdate.getEvents());
+        compilation = compilationStorage.save(compilation);
 
-        return CompilationMapper.makeDto(compilationForUpdate, makeEventShort(compilationForUpdate.getEvents(),
+        Map<Long, Long> confirmedRequestByEventId = getConfirmedRequests(compilation.getEvents());
+        Map<Long, Long> viewsByEventId = getViews(compilation.getEvents());
+
+        return CompilationMapper.makeDto(compilation, makeEventShort(compilation.getEvents(),
                 confirmedRequestByEventId, viewsByEventId));
     }
 
@@ -128,11 +136,6 @@ public class CompilationServiceImpl implements CompilationService {
     private Compilation getCompilation(long compilationId) {
         return compilationStorage.findById(compilationId)
                 .orElseThrow(() -> new EntityNotFoundException(WRONG_COMPILATION_ID));
-    }
-
-    private Event getEvent(long eventId) {
-        return eventStorage.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException(WRONG_EVENT_ID));
     }
 
     private Compilation addEventsToCompilation(Compilation compilation, Set<Long> eventsId) {
@@ -189,19 +192,6 @@ public class CompilationServiceImpl implements CompilationService {
                                 confirmed.getOrDefault(event.getId(), 0L),
                                 views.getOrDefault(event.getId(), 0L)))
                 .collect(Collectors.toSet());
-    }
-
-    private UpdateCompilationRequest completeFields(UpdateCompilationRequest request, Compilation compilation) {
-        if (request.getEventsId().isEmpty()) {
-            request.setEventsId(compilation.getEvents().stream().map(Event::getId).collect(Collectors.toSet()));
-        }
-        if (request.getPinned() == null) {
-            request.setPinned(compilation.getPinned());
-        }
-        if (request.getTitle() == null) {
-            request.setTitle(compilation.getTitle());
-        }
-        return request;
     }
 
     private List<EndpointHitStatsDto> getStatsDto(LocalDateTime rangeStart, LocalDateTime rangeEnd, String[] urisArray,

@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.EntityNotFoundException;
-import ru.practicum.exception.NotAvailableException;
 
 import javax.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
@@ -32,14 +31,6 @@ public class ErrorHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleMissingServletRequestParameterExceptionException(final MissingServletRequestParameterException e) {
-        log.debug("Получен статус 400 Bad Request {}", e.getMessage(), e);
-        return new ApiError(Arrays.toString(e.getStackTrace()), e.getMessage(), BAD_REQUEST,
-                "BAD_REQUEST", LocalDateTime.now());
-    }
-
-    @ExceptionHandler(NotAvailableException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleNotAvailableException(final RuntimeException e) {
         log.debug("Получен статус 400 Bad Request {}", e.getMessage(), e);
         return new ApiError(Arrays.toString(e.getStackTrace()), e.getMessage(), BAD_REQUEST,
                 "BAD_REQUEST", LocalDateTime.now());

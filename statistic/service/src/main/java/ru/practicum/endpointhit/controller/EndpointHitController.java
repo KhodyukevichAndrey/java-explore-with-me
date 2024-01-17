@@ -33,7 +33,7 @@ public class EndpointHitController {
                                               @RequestParam(name = "end")
                                               @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
                                               @RequestParam(name = "uris", required = false) String[] uris,
-                                              @RequestParam(name = "unique", required = false) Boolean unique) {
+                                              @RequestParam(name = "unique", defaultValue = "false") Boolean unique) {
         log.debug("Получен запрос GET /stats?start={start}&end={end}&uris={uris}&unique={unique}");
         return service.getStats(start, end, uris, unique);
     }

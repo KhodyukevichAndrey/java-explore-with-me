@@ -45,7 +45,7 @@ public class StatsClient {
         parameters.put("end", encodedEnd);
 
         StringBuilder builder = new StringBuilder();
-        builder.append("/stats?start={start}&end={end}");
+        builder.append("http://localhost:9090/stats?start={start}&end={end}");
 
         if (uris != null) {
             parameters.put("uris", String.join(",", uris));

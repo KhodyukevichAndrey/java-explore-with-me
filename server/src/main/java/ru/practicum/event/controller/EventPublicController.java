@@ -27,7 +27,7 @@ public class EventPublicController {
 
     @GetMapping
     public List<EventShortDto> getEventsByFilter(@RequestParam(required = false) String text,
-                                                 @RequestParam(required = false) Integer[] categories,
+                                                 @RequestParam(required = false) List<Long> categories,
                                                  @RequestParam(required = false) Boolean paid,
                                                  @RequestParam(required = false)
                                                  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,

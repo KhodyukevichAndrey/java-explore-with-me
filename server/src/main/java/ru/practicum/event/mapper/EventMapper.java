@@ -33,44 +33,6 @@ public class EventMapper {
         );
     }
 
-    public Event makeEventForUpdateByAdmin(UpdateEventAdminRequest dto, User initiator, Category category, long eventId) {
-        return new Event(
-                eventId,
-                dto.getAnnotation(),
-                category,
-                LocalDateTime.now(),
-                dto.getDescription(),
-                dto.getEventDate(),
-                initiator,
-                dto.getLocation(),
-                dto.getPaid(),
-                dto.getParticipantLimit(),
-                LocalDateTime.now(),
-                dto.getRequestModeration(),
-                EventState.PENDING,
-                dto.getTitle()
-        );
-    }
-
-    public Event makeEventForUpdateByInitiator(UpdateEventUserRequest dto, User initiator, Category category, Event event) {
-        return new Event(
-                event.getId(),
-                dto.getAnnotation(),
-                category,
-                LocalDateTime.now(),
-                dto.getDescription(),
-                dto.getEventDate(),
-                initiator,
-                dto.getLocation(),
-                dto.getPaid(),
-                dto.getParticipantLimit(),
-                LocalDateTime.now(),
-                dto.getRequestModeration(),
-                event.getEventState(),
-                dto.getTitle()
-        );
-    }
-
     public EventFullDto makeEventFullDto(Event event, long confirmedRequest, long views) {
         return new EventFullDto(
                 event.getId(),
@@ -96,13 +58,13 @@ public class EventMapper {
         return new EventShortDto(
                 event.getAnnotation(),
                 event.getCategory(),
-                confirmedRequest, //переделка
+                confirmedRequest,
                 event.getEventDate(),
                 event.getId(),
                 UserMapper.makeUserShortDto(event.getInitiator()),
                 event.getIsPaid(),
                 event.getTitle(),
-                views //переделка
+                views
         );
     }
 }

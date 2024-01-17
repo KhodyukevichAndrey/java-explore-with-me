@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +23,6 @@ import ru.practicum.category.storage.CategoryStorage;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.state.StateAction;
 import ru.practicum.exception.ConflictException;
-import ru.practicum.exception.NotAvailableException;
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.request.dto.ParticipationRequestDto;
@@ -52,6 +52,7 @@ public class EventServiceImpl implements EventService {
     private final CategoryStorage categoryStorage;
     private final RequestStorage requestStorage;
     private final StatsClient statsClient;
+    private final ObjectMapper objectMapper;
 
     // For EventPrivateController
     @Override
@@ -96,8 +97,9 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto updateEventByInitiator(long userId, long eventId, UpdateEventUserRequest dto) {
-        User user = getUser(userId);
+        getUser(userId);
         Event event = getEvent(eventId);
+        StateAction stateAction = dto.getStateAction();
 
         if (dto.getCategory() != null) {
             event.setCategory(getCat(dto.getCategory()));
@@ -116,21 +118,19 @@ public class EventServiceImpl implements EventService {
             throw new ConflictException(BAD_START_TIME);
         }
 
-        if (dto.getStateAction().equals(StateAction.SEND_TO_REVIEW)) {
-            event.setEventState(EventState.PENDING);
+        if (stateAction != null) {
+            if (stateAction.equals(StateAction.SEND_TO_REVIEW)) {
+                event.setEventState(EventState.PENDING);
+            } else if (stateAction.equals(StateAction.CANCEL_REVIEW)) {
+                event.setEventState(EventState.CANCELED);
+            }
         }
 
-        if (dto.getStateAction().equals(StateAction.CANCEL_REVIEW)) {
-            event.setEventState(EventState.CANCELED);
-        }
-
-        if (event.getInitiator().getId() == userId) {
-            Event eventForUpdate = EventMapper.makeEventForUpdateByInitiator(dto, user, event.getCategory(), event);
-            eventStorage.save(eventForUpdate);
-            return makeEventFull(List.of(eventForUpdate), confirmed, views).get(0);
-        } else {
+        if (event.getInitiator().getId() != userId) {
             throw new ConflictException(ErrorConstants.WRONG_COMBINATION_OF_INIT_AND_EVENT);
         }
+
+        return makeEventFull(List.of(eventStorage.save(event)), confirmed, views).get(0);
     }
 
     @Override
@@ -203,47 +203,48 @@ public class EventServiceImpl implements EventService {
         completeFieldsByAdminUpdate(dto, event);
 
         if (!eventDate.isAfter(LocalDateTime.now().plusHours(1L))) {
-            throw new NotAvailableException(ErrorConstants.EVENT_START_TIME);
+            throw new ConflictException(ErrorConstants.EVENT_START_TIME);
         }
         if (!event.getEventState().equals(EventState.PENDING)) {
-            throw new NotAvailableException(EVENT_NOT_AVAILABLE_STATE);
-        }
-        if (event.getEventState().equals(EventState.PUBLISHED)) {
-            throw new NotAvailableException(EVENT_NOT_AVAILABLE_STATE);
+            throw new ConflictException(EVENT_NOT_AVAILABLE_STATE);
         }
 
-        Event eventForUpdate = EventMapper.makeEventForUpdateByAdmin(dto, event.getInitiator(), event.getCategory(), eventId);
-        if (stateAction.equals(StateAction.PUBLISH_EVENT)) {
-            eventForUpdate.setEventState(EventState.PUBLISHED);
-            eventForUpdate.setPublishedOn(LocalDateTime.now());
-            eventStorage.save(eventForUpdate);
-        } else if (stateAction.equals(StateAction.REJECT_EVENT)) {
-            eventForUpdate.setEventState(EventState.CANCELED);
-            eventStorage.save(eventForUpdate);
-        } else {
-            throw new NotAvailableException("Недопустимый статус события");
+        if (stateAction != null) {
+            if (stateAction.equals(StateAction.PUBLISH_EVENT)) {
+                event.setEventState(EventState.PUBLISHED);
+                event.setPublishedOn(LocalDateTime.now());
+                eventStorage.save(event);
+            } else if (stateAction.equals(StateAction.REJECT_EVENT)) {
+                event.setEventState(EventState.CANCELED);
+                eventStorage.save(event);
+            }
         }
 
-        return makeEventFull(List.of(eventForUpdate), confirmed, views).get(0);
+        return makeEventFull(List.of(event), confirmed, views).get(0);
     }
 
     // For EventPublicController
 
     @Override
-    public List<EventShortDto> getEventForNotRegistrationUserByFiltering(String text, Integer[] categories, Boolean isPaid,
+    public List<EventShortDto> getEventForNotRegistrationUserByFiltering(String text, List<Long> categories, Boolean isPaid,
                                                                          LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                                          Boolean onlyAvailable, String sort, int from, int size) {
-        List<Event> events;
-        if (sort != null && sort.equalsIgnoreCase("EVENT_DATE")) {
-            events = eventStorage.findEventByNotRegistrationUser(text, categories, isPaid, rangeStart, rangeEnd,
-                    onlyAvailable, PageRequest.of(from / size, size, SortConstants.SORT_BY_EVENT_DATE_ASC));
-        } else if (sort != null && sort.equalsIgnoreCase("VIEWS")) {
-            events = eventStorage.findEventByNotRegistrationUser(text, categories, isPaid, rangeStart, rangeEnd,
-                    onlyAvailable, PageRequest.of(from / size, size, SortConstants.SORT_BY_VIEWS_DESC));
-        } else {
-            events = eventStorage.findEventByNotRegistrationUser(text, categories, isPaid, rangeStart, rangeEnd,
-                    onlyAvailable, PageRequest.of(from / size, size, SortConstants.SORT_BY_ID_ASC));
+        Sort currentSort;
+        if (rangeStart != null && rangeEnd != null && (rangeStart.isAfter(rangeEnd))) {
+            throw new ConflictException("WRONG CONDITION");
         }
+
+        if (sort != null && sort.equalsIgnoreCase("EVENT_DATE")) {
+            currentSort = SortConstants.SORT_BY_EVENT_DATE_ASC;
+        } else if (sort != null && sort.equalsIgnoreCase("VIEWS")) {
+            currentSort = SortConstants.SORT_BY_VIEWS_DESC;
+        } else {
+            currentSort = SortConstants.SORT_BY_ID_ASC;
+        }
+
+        List<Event> events = eventStorage.findEventByNotRegistrationUser(text, categories, isPaid, rangeStart, rangeEnd,
+                onlyAvailable, PageRequest.of(from / size, size, currentSort));
+
         Map<Long, Long> confirmedRequest = getConfirmedRequests(events);
         Map<Long, Long> views = getViews(events);
 
@@ -352,66 +353,78 @@ public class EventServiceImpl implements EventService {
         return result;
     }
 
-    private UpdateEventAdminRequest completeFieldsByAdminUpdate(UpdateEventAdminRequest dto, Event event) {
-        if (dto.getAnnotation() == null) {
-            dto.setAnnotation(event.getAnnotation());
+    private Event completeFieldsByAdminUpdate(UpdateEventAdminRequest dto, Event event) {
+        if (dto.getAnnotation() != null && !dto.getAnnotation().isBlank()) {
+            event.setAnnotation(dto.getAnnotation());
         }
-        if (dto.getCategory() == null) {
-            dto.setCategory(event.getCategory().getId());
+        if (dto.getCategory() != null) {
+            event.setCategory(getCat(dto.getCategory()));
         }
-        if (dto.getDescription() == null) {
-            dto.setDescription(event.getDescription());
+        if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
+            event.setDescription(dto.getDescription());
         }
-        if (dto.getEventDate() == null) {
-            dto.setEventDate(event.getEventDate());
+        if (dto.getEventDate() != null) {
+            event.setEventDate(dto.getEventDate());
         }
-        if (dto.getLocation() == null) {
-            dto.setLocation(event.getLocation());
+        if (dto.getLocation() != null) {
+            event.setLocation(dto.getLocation());
         }
-        if (dto.getPaid() == null) {
-            dto.setPaid(event.getIsPaid());
+        if (dto.getPaid() != null) {
+            event.setIsPaid(dto.getPaid());
         }
-        if (dto.getParticipantLimit() == null) {
-            dto.setParticipantLimit(event.getParticipantLimit());
+        if (dto.getParticipantLimit() != null) {
+            event.setParticipantLimit(dto.getParticipantLimit());
         }
-        if (dto.getRequestModeration() == null) {
-            dto.setRequestModeration(event.getRequestModeration());
+        if (dto.getRequestModeration() != null) {
+            event.setRequestModeration(dto.getRequestModeration());
         }
-        if (dto.getTitle() == null) {
-            dto.setTitle(event.getTitle());
+        if (dto.getTitle() != null) {
+            event.setTitle(dto.getTitle());
         }
-        return dto;
+        return event;
     }
 
-    private UpdateEventUserRequest completeFieldsByUserUpdate(UpdateEventUserRequest dto, Event event) {
-        if (dto.getAnnotation() == null) {
-            dto.setAnnotation(event.getAnnotation());
+    private Event completeFieldsByUserUpdate(UpdateEventUserRequest dto, Event event) {
+        StateAction stateAction = dto.getStateAction();
+
+        if (dto.getAnnotation() != null && !dto.getAnnotation().isBlank()) {
+            event.setAnnotation(dto.getAnnotation());
         }
-        if (dto.getCategory() == null) {
-            dto.setCategory(event.getCategory().getId());
+        if (dto.getCategory() != null) {
+            event.setCategory(getCat(dto.getCategory()));
         }
-        if (dto.getDescription() == null) {
-            dto.setDescription(event.getDescription());
+        if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
+            event.setDescription(dto.getDescription());
         }
-        if (dto.getEventDate() == null) {
-            dto.setEventDate(event.getEventDate());
+        if (dto.getEventDate() != null) {
+            event.setEventDate(dto.getEventDate());
         }
-        if (dto.getLocation() == null) {
-            dto.setLocation(event.getLocation());
+        if (dto.getLocation() != null) {
+            event.setLocation(dto.getLocation());
         }
-        if (dto.getPaid() == null) {
-            dto.setPaid(event.getIsPaid());
+        if (dto.getPaid() != null) {
+            event.setIsPaid(dto.getPaid());
         }
-        if (dto.getParticipantLimit() == null) {
-            dto.setParticipantLimit(event.getParticipantLimit());
+        if (dto.getParticipantLimit() != null) {
+            event.setParticipantLimit(dto.getParticipantLimit());
         }
-        if (dto.getRequestModeration() == null) {
-            dto.setRequestModeration(event.getRequestModeration());
+        if (dto.getRequestModeration() != null) {
+            event.setRequestModeration(dto.getRequestModeration());
         }
-        if (dto.getTitle() == null) {
-            dto.setTitle(event.getTitle());
+        if (dto.getTitle() != null) {
+            event.setTitle(dto.getTitle());
         }
-        return dto;
+        if (stateAction != null) {
+            if (stateAction == StateAction.PUBLISH_EVENT) {
+                event.setEventState(EventState.PUBLISHED);
+                event.setPublishedOn(LocalDateTime.now());
+            } else if (stateAction == StateAction.SEND_TO_REVIEW) {
+                event.setEventState(EventState.PENDING);
+            } else if (stateAction == StateAction.CANCEL_REVIEW) {
+                event.setEventState(EventState.CANCELED);
+            }
+        }
+        return event;
     }
 
     private Map<Long, Long> getConfirmedRequests(List<Event> events) {
@@ -472,13 +485,13 @@ public class EventServiceImpl implements EventService {
     private List<EndpointHitStatsDto> getStatsDto(LocalDateTime rangeStart, LocalDateTime rangeEnd, String[] urisArray,
                                                   boolean unique) {
         ResponseEntity<Object> responseEntity = statsClient.getStats(rangeStart, rangeEnd, urisArray, unique);
-        Object body = responseEntity.getBody();
-
-        if (body == null) {
+        if (responseEntity.getBody() == null) {
             return Collections.emptyList();
         }
+        List<EndpointHitStatsDto> statsDtos = objectMapper.convertValue(responseEntity.getBody(), new TypeReference<>() {
+        });
 
-        return new ObjectMapper().convertValue(body, new TypeReference<>() {
+        return objectMapper.convertValue(responseEntity.getBody(), new TypeReference<List<EndpointHitStatsDto>>() {
         });
     }
 }

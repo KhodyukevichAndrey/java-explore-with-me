@@ -30,4 +30,6 @@ public class ErrorConstants {
     public static final String INTERNAL_SERVER_ERROR = "Неожиданная ошибка сервера";
     public static final String BAD_START_TIME = "дата и время на которые намечено событие не может быть раньше," +
             " чем через два часа от текущего момента";
+    public static final String EVENT_CATEGORY_EXIST = "Удаление категории, для которой существует событие - недопустимо";
+    public static final String WRONG_EVENT_STATUS_FOR_CONFIRM = "Согласование события из данного статуса - недопустимо";
 }

@@ -29,7 +29,7 @@ public interface EventService {
 
     EventFullDto updateEventStatusByAdmin(long eventId, UpdateEventAdminRequest dto);
 
-    List<EventShortDto> getEventForNotRegistrationUserByFiltering(String text, Integer[] categories, Boolean isPaid,
+    List<EventShortDto> getEventForNotRegistrationUserByFiltering(String text, List<Long> categories, Boolean isPaid,
                                                                   LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                                   Boolean onlyAvailable, String sort, int from, int size);
 

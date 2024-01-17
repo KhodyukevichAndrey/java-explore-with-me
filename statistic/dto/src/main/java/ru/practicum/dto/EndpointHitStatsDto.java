@@ -1,10 +1,11 @@
 package ru.practicum.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class EndpointHitStatsDto {
     private String app;
     private String uri;

@@ -9,6 +9,8 @@ import ru.practicum.category.dto.NewCategoryDto;
 import ru.practicum.category.model.Category;
 import ru.practicum.constants.error.ErrorConstants;
 import ru.practicum.constants.sort.SortConstants;
+import ru.practicum.event.storage.EventStorage;
+import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.EntityNotFoundException;
 import ru.practicum.category.mapper.CategoryMapper;
 import ru.practicum.category.storage.CategoryStorage;
@@ -16,12 +18,15 @@ import ru.practicum.category.storage.CategoryStorage;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static ru.practicum.constants.error.ErrorConstants.EVENT_CATEGORY_EXIST;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryStorage storage;
+    private final EventStorage eventStorage;
 
     @Override
     @Transactional
@@ -34,7 +39,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void deleteCategory(long catId) {
         getCat(catId);
-        storage.deleteById(catId);
+        if (eventStorage.existsEventByCategoryId(catId)) {
+            throw new ConflictException(EVENT_CATEGORY_EXIST);
+        } else {
+            storage.deleteById(catId);
+        }
     }
 
     @Override

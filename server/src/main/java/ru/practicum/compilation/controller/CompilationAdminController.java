@@ -34,7 +34,7 @@ public class CompilationAdminController {
     }
 
     @PatchMapping("/{compId}")
-    public CompilationDto updateCompilation(@PathVariable long compId, @RequestBody UpdateCompilationRequest request) {
+    public CompilationDto updateCompilation(@PathVariable long compId, @RequestBody @Valid UpdateCompilationRequest request) {
         log.debug("Получен запрос Patch /admin/compilations/{compId}");
         return service.updateCompilation(compId, request);
     }

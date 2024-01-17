@@ -3,7 +3,6 @@ package ru.practicum.compilation.mapper;
 import lombok.experimental.UtilityClass;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.dto.NewCompilationDto;
-import ru.practicum.compilation.dto.UpdateCompilationRequest;
 import ru.practicum.compilation.model.Compilation;
 import ru.practicum.event.dto.EventShortDto;
 
@@ -22,19 +21,10 @@ public class CompilationMapper {
         );
     }
 
-    public Compilation makeCompilationForUpdate(UpdateCompilationRequest request, long compilationId) {
-        return new Compilation(
-                compilationId,
-                new HashSet<>(),
-                request.getPinned(),
-                request.getTitle()
-        );
-    }
-
     public CompilationDto makeDto(Compilation compilation, Set<EventShortDto> eventShortDto) {
         return new CompilationDto(
-                eventShortDto,
                 compilation.getId(),
+                eventShortDto,
                 compilation.getPinned(),
                 compilation.getTitle()
         );

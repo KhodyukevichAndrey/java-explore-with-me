@@ -32,7 +32,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDto> getUsers(Integer[] ids, int from, int size) {
+    public List<UserDto> getUsers(List<Long> ids, int from, int size) {
         List<User> users;
         PageRequest pr = PageRequest.of(from / size, size, SORT_BY_ID_ASC);
         if (ids != null) {

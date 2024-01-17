@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import ru.practicum.event.model.Location;
 import ru.practicum.event.state.StateAction;
 
+import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
@@ -15,11 +16,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class UpdateEventUserRequest {
 
-    @Size(min = 20, max = 200)
+    @Size(min = 20, max = 2000)
     private String annotation;
     private Long category;
     @Size(min = 20, max = 7000)
     private String description;
+    @FutureOrPresent
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
     private Location location;

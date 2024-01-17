@@ -35,15 +35,17 @@ public interface EventStorage extends JpaRepository<Event, Long> {
     @Query("select e " +
             "from Event e " +
             "where e.eventState = 'PUBLISHED' " +
-            "AND ((lower(e.annotation) like concat('%', lower(:text), '%')) or (lower(e.description) like concat('%', lower(:text), '%')) or (:text is null)) " +
+            "AND (lower(e.annotation) like lower(concat('%', :text, '%'))) " +
+            "or (lower(e.description) like lower(concat('%', :text, '%'))) " +
+            "or (:text is null) " +
             "AND ((e.category.id IN :categories) or (:categories is null)) " +
             "AND ((e.isPaid = :isPaid) or (:isPaid is null)) " +
             "AND (e.eventDate < cast(:rangeEnd AS date) or cast(:rangeStart AS date) is null) " +
             "AND (e.eventDate > cast(:rangeStart AS date) or cast(:rangeEnd AS date) is null) " +
             "AND (:onlyAvailable = true AND e.participantLimit > (select count(pr) from ParticipationRequest as pr " +
-            "where e.id = pr.event.id)) or :onlyAvailable = false ")
+            "where e.id = pr.event.id)) or (:onlyAvailable = false) or (:onlyAvailable is null) ")
     List<Event> findEventByNotRegistrationUser(@Param("text") String text,
-                                               @Param("categories") Integer[] categories,
+                                               @Param("categories") List<Long> categories,
                                                @Param("isPaid") Boolean isPaid,
                                                @Param("rangeStart") LocalDateTime rangeStart,
                                                @Param("rangeEnd") LocalDateTime rangeEnd,
@@ -51,4 +53,6 @@ public interface EventStorage extends JpaRepository<Event, Long> {
                                                Pageable p);
 
     Set<Event> findEventByIdIn(Set<Long> ids);
+
+    boolean existsEventByCategoryId(long catId);
 }
