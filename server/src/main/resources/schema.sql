@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     email VARCHAR(254) NOT NULL,
     name VARCHAR(250) NOT NULL,
-    CONSTRAINT unique_email UNIQUE (email)
+    CONSTRAINT unique_email UNIQUE (email),
+    CONSTRAINT unique_name UNIQUE (name)
 );
 
 CREATE TABLE IF NOT EXISTS categories (

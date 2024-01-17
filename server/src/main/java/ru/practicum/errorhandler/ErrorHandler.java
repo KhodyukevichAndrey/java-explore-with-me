@@ -2,7 +2,7 @@ package ru.practicum.errorhandler;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -22,7 +22,7 @@ import static ru.practicum.constants.error.ErrorConstants.*;
 @Slf4j
 public class ErrorHandler {
 
-    @ExceptionHandler(ConstraintViolationException.class)
+    @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleConstraintViolationException(final RuntimeException e) {
         log.debug("Получен статус 409 Conflict {}", e.getMessage(), e);
