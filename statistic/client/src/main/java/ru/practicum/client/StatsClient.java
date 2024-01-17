@@ -21,7 +21,7 @@ public class StatsClient extends BaseClient {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Autowired
-    public StatsClient(@Value("{explore-with-me-statistic.server.url}") String serverUrl, RestTemplateBuilder builder) {
+    public StatsClient(@Value("${explore-with-me-statistic.server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
@@ -31,7 +31,7 @@ public class StatsClient extends BaseClient {
     }
 
     public ResponseEntity<Object> postEndpointHit(EndpointHitDto dto) {
-        return post("http://localhost:9090/hit", dto);
+        return post("/hit", dto);
     }
 
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end, @Nullable String[] uris, @Nullable Boolean unique) {
@@ -40,7 +40,7 @@ public class StatsClient extends BaseClient {
         parameters.put("end", end.format(FORMATTER));
 
         StringBuilder builder = new StringBuilder();
-        builder.append("http://localhost:9090/stats?start={start}&end={end}");
+        builder.append("/stats?start={start}&end={end}");
 
         if (uris != null) {
             parameters.put("uris", String.join(",", uris));
