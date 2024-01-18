@@ -247,7 +247,6 @@ public class EventServiceImpl implements EventService {
 
         List<Event> events = eventStorage.findEventByNotRegistrationUser(text, categories, isPaid, rangeStart, rangeEnd,
                 onlyAvailable, PageRequest.of(from / size, size, currentSort));
-
         Map<Long, Long> confirmedRequest = getConfirmedRequests(events);
         Map<Long, Long> views = getViews(events);
 

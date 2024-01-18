@@ -35,15 +35,16 @@ public interface EventStorage extends JpaRepository<Event, Long> {
     @Query("select e " +
             "from Event e " +
             "where e.eventState = 'PUBLISHED' " +
-            "AND (lower(e.annotation) like lower(concat('%', :text, '%')) " +
-            "or lower(e.description) like lower(concat('%', :text, '%'))) " +
-            "or (:text is null) " +
-            "AND ((e.category.id IN :categories) or (:categories is null)) " +
-            "AND ((e.isPaid = :isPaid) or (:isPaid is null)) " +
+            "AND ((lower(e.annotation) like lower(concat('%', :text, '%'))) " +
+            "or (lower(e.description) like lower(concat('%', :text, '%'))) " +
+            "or (:text is null)) " +
+            "AND (e.category.id IN :categories or :categories is null) " +
+            "AND (e.isPaid = :isPaid or :isPaid is null) " +
             "AND (e.eventDate < cast(:rangeEnd AS date) or cast(:rangeStart AS date) is null) " +
             "AND (e.eventDate > cast(:rangeStart AS date) or cast(:rangeEnd AS date) is null) " +
-            "AND (:onlyAvailable = true AND e.participantLimit > (select count(pr) from ParticipationRequest as pr " +
-            "where e.id = pr.event.id)) or (:onlyAvailable = false) or (:onlyAvailable is null) ")
+            "AND (:onlyAvailable = false OR ((:onlyAvailable = true AND e.participantLimit > " +
+            "(SELECT count(*) FROM ParticipationRequest pr WHERE e.id = pr.event.id))) " +
+            "OR (e.participantLimit > 0 ))")
     List<Event> findEventByNotRegistrationUser(@Param("text") String text,
                                                @Param("categories") List<Long> categories,
                                                @Param("isPaid") Boolean isPaid,
