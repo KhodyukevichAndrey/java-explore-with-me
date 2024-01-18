@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static ru.practicum.constants.error.ErrorConstants.WRONG_USER_ID;
-import static ru.practicum.constants.sort.SortConstants.SORT_BY_ID_ASC;
+import static ru.practicum.constants.sort.SortConstants.SORT_USERS_BY_ID_ASC;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDto> getUsers(List<Long> ids, int from, int size) {
         List<User> users;
-        PageRequest pr = PageRequest.of(from / size, size, SORT_BY_ID_ASC);
+        PageRequest pr = PageRequest.of(from / size, size, SORT_USERS_BY_ID_ASC);
         if (ids != null) {
             users = storage.findAllUserByIdIn(ids, pr);
         } else {

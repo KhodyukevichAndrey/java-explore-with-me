@@ -108,10 +108,10 @@ public class CompilationServiceImpl implements CompilationService {
 
         if (pinned == null) {
             compilations = compilationStorage
-                    .findAll(PageRequest.of(from / size, size, SortConstants.SORT_BY_ID_ASC)).getContent();
+                    .findAll(PageRequest.of(from / size, size, SortConstants.SORT_EVENT_BY_ID_DESC)).getContent();
         } else {
             compilations = compilationStorage.findByPinned(pinned,
-                    PageRequest.of(from / size, size, SortConstants.SORT_BY_ID_ASC));
+                    PageRequest.of(from / size, size, SortConstants.SORT_EVENT_BY_ID_DESC));
         }
 
         Set<Event> events = getEventsByCompilationId(compilations);

@@ -61,7 +61,7 @@ public class EventServiceImpl implements EventService {
     public List<EventFullDto> getInitiatorEvents(long userId, int from, int size) {
         getUser(userId);
         List<Event> events = eventStorage.findEventByInitiatorId(userId,
-                PageRequest.of(from / size, size, SortConstants.SORT_BY_ID_ASC));
+                PageRequest.of(from / size, size, SortConstants.SORT_EVENT_BY_ID_DESC));
 
         Map<Long, Long> confirmed = getConfirmedRequests(events);
         Map<Long, Long> views = getViews(events);
@@ -186,7 +186,7 @@ public class EventServiceImpl implements EventService {
                                                        int from, int size) {
 
         List<Event> events = eventStorage.findEventByAdminParameters(users, states, categories, rangeStart,
-                rangeEnd, PageRequest.of(from / size, size, SortConstants.SORT_BY_ID_ASC));
+                rangeEnd, PageRequest.of(from / size, size, SortConstants.SORT_EVENT_BY_ID_DESC));
         Map<Long, Long> confirmed = getConfirmedRequests(events);
         Map<Long, Long> views = getViews(events);
 
@@ -242,7 +242,7 @@ public class EventServiceImpl implements EventService {
         } else if (sort != null && sort.equalsIgnoreCase("VIEWS")) {
             currentSort = SortConstants.SORT_BY_VIEWS_DESC;
         } else {
-            currentSort = SortConstants.SORT_BY_ID_ASC;
+            currentSort = SortConstants.SORT_EVENT_BY_ID_DESC;
         }
 
         List<Event> events = eventStorage.findEventByNotRegistrationUser(text, categories, isPaid, rangeStart, rangeEnd,

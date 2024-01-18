@@ -59,7 +59,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryDto> getCategories(int from, int size) {
-        List<Category> categories = storage.findAll(PageRequest.of(from / size, size, SortConstants.SORT_BY_ID_ASC))
+        List<Category> categories = storage.findAll(PageRequest.of(from / size, size, SortConstants.SORT_EVENT_BY_ID_DESC))
                 .getContent();
         return categories.stream()
                 .map(CategoryMapper::makeCatDto)
