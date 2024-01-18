@@ -22,36 +22,12 @@ import static ru.practicum.constants.error.ErrorConstants.*;
 @Slf4j
 public class ErrorHandler {
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ExceptionHandler({DataIntegrityViolationException.class, ConflictException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleConstraintViolationException(final RuntimeException e) {
         log.debug("Получен статус 409 Conflict {}", e.getMessage(), e);
         return new ApiError(Arrays.toString(e.getStackTrace()), e.getMessage(), CONFLICT,
                 "CONFLICT", LocalDateTime.now());
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleMethodArgumentException(final MethodArgumentNotValidException e) {
-        log.debug("Получен статус 400 Bad Request {}", e.getMessage(), e);
-        return new ApiError(Arrays.toString(e.getStackTrace()), e.getMessage(), BAD_REQUEST,
-                "BAD_REQUEST", LocalDateTime.now());
-    }
-
-    @ExceptionHandler(NotAvailableException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleNotAvailableException(final RuntimeException e) {
-        log.debug("Получен статус 400 Bad Request {}", e.getMessage(), e);
-        return new ApiError(Arrays.toString(e.getStackTrace()), e.getMessage(), BAD_REQUEST,
-                "BAD_REQUEST", LocalDateTime.now());
-    }
-
-    @ExceptionHandler(MissingServletRequestParameterException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleMissingServletRequestParameterExceptionException(final MissingServletRequestParameterException e) {
-        log.debug("Получен статус 400 Bad Request {}", e.getMessage(), e);
-        return new ApiError(Arrays.toString(e.getStackTrace()), e.getMessage(), BAD_REQUEST,
-                "BAD_REQUEST", LocalDateTime.now());
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
@@ -62,12 +38,12 @@ public class ErrorHandler {
                 "NOT_FOUND", LocalDateTime.now());
     }
 
-    @ExceptionHandler(ConflictException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError handleConflictException(final RuntimeException e) {
-        log.debug("Получен статус 409 Conflict {}", e.getMessage(), e);
-        return new ApiError(Arrays.toString(e.getStackTrace()), e.getMessage(), CONFLICT,
-                "CONFLICT", LocalDateTime.now());
+    @ExceptionHandler({MethodArgumentNotValidException.class, NotAvailableException.class, MissingServletRequestParameterException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleMethodArgumentException(final RuntimeException e) {
+        log.debug("Получен статус 400 Bad Request {}", e.getMessage(), e);
+        return new ApiError(Arrays.toString(e.getStackTrace()), e.getMessage(), BAD_REQUEST,
+                "BAD_REQUEST", LocalDateTime.now());
     }
 
     @ExceptionHandler

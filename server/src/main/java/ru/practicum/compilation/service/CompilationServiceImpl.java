@@ -22,7 +22,7 @@ import ru.practicum.event.model.Event;
 import ru.practicum.event.state.EventState;
 import ru.practicum.event.storage.EventStorage;
 import ru.practicum.exception.EntityNotFoundException;
-import ru.practicum.request.status.Status;
+import ru.practicum.request.model.EventConfirmedParticipation;
 import ru.practicum.request.storage.RequestStorage;
 
 import java.time.LocalDateTime;
@@ -114,9 +114,11 @@ public class CompilationServiceImpl implements CompilationService {
                     PageRequest.of(from / size, size, SortConstants.SORT_BY_ID_ASC));
         }
 
+        Set<Event> events = getEventsByCompilationId(compilations);
+        Map<Long, Long> confirmedRequestByEventId = getConfirmedRequests(events);
+        Map<Long, Long> viewsByEventId = getViews(events);
+
         for (Compilation compilation : compilations) {
-            Map<Long, Long> confirmedRequestByEventId = getConfirmedRequests(compilation.getEvents());
-            Map<Long, Long> viewsByEventId = getViews(compilation.getEvents());
             compilationDto.add(CompilationMapper.makeDto(compilation, makeEventShort(compilation.getEvents(),
                     confirmedRequestByEventId, viewsByEventId)));
         }
@@ -152,9 +154,8 @@ public class CompilationServiceImpl implements CompilationService {
                 .map(Event::getId)
                 .collect(toList());
 
-        return requestStorage.findParticipationRequestByEventIdInAndStatus(eventsIds, Status.CONFIRMED)
-                .stream()
-                .collect(groupingBy(pr -> pr.getEvent().getId(), Collectors.counting()));
+        return requestStorage.countByEvent(eventsIds).stream()
+                .collect(toMap(EventConfirmedParticipation::getEventId, EventConfirmedParticipation::getCount));
     }
 
     private Map<Long, Long> getViews(Set<Event> events) {
@@ -206,5 +207,14 @@ public class CompilationServiceImpl implements CompilationService {
 
         return objectMapper.convertValue(responseEntity.getBody(), new TypeReference<>() {
         });
+    }
+
+    private Set<Event> getEventsByCompilationId(List<Compilation> compilations) {
+        Set<Event> events = new HashSet<>();
+        for (Compilation c : compilations) {
+            events.addAll(c.getEvents());
+        }
+
+        return events;
     }
 }

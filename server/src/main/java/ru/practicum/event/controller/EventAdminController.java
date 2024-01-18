@@ -3,6 +3,7 @@ package ru.practicum.event.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.UpdateEventAdminRequest;
@@ -19,6 +20,7 @@ import java.util.List;
 @RequestMapping("/admin/events")
 @Slf4j
 @RequiredArgsConstructor
+@Validated
 public class EventAdminController {
 
     private final EventService service;
@@ -33,7 +35,8 @@ public class EventAdminController {
                                         @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                         @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                         @RequestParam(defaultValue = "10") @Positive int size) {
-        log.debug("Получен запрос Get /admin/events");
+        log.debug("Получен запрос Get /admin/events?users={}&states={}&categories={}&rangeStart={}&rangeEnd={}&from={}" +
+                "&size={}", users, states, categories, rangeStart, rangeEnd, from, size);
         return service.getEventByAdminFiltering(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 

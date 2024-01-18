@@ -15,19 +15,20 @@ import ru.practicum.constants.error.ErrorConstants;
 import ru.practicum.constants.sort.SortConstants;
 import ru.practicum.dto.EndpointHitStatsDto;
 import ru.practicum.event.dto.*;
+import ru.practicum.event.mapper.LocationMapper;
 import ru.practicum.event.model.Event;
 import ru.practicum.event.state.EventState;
 import ru.practicum.event.storage.EventStorage;
 import ru.practicum.exception.EntityNotFoundException;
 import ru.practicum.category.storage.CategoryStorage;
 import ru.practicum.event.mapper.EventMapper;
-import ru.practicum.event.state.StateAction;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotAvailableException;
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.mapper.RequestMapper;
+import ru.practicum.request.model.EventConfirmedParticipation;
 import ru.practicum.request.model.ParticipationRequest;
 import ru.practicum.request.status.Status;
 import ru.practicum.request.storage.RequestStorage;
@@ -100,13 +101,13 @@ public class EventServiceImpl implements EventService {
     public EventFullDto updateEventByInitiator(long userId, long eventId, UpdateEventUserRequest dto) {
         getUser(userId);
         Event event = getEvent(eventId);
-        StateAction stateAction = dto.getStateAction();
+        UpdateEventUserRequest.StateAction stateAction = dto.getStateAction();
 
         if (dto.getCategory() != null) {
             event.setCategory(getCat(dto.getCategory()));
         }
 
-        completeFieldsByUserUpdate(dto, event);
+        completeFieldsForUpdated(dto, event);
 
         Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
         Map<Long, Long> views = getViews(List.of(event));
@@ -120,9 +121,9 @@ public class EventServiceImpl implements EventService {
         }
 
         if (stateAction != null) {
-            if (stateAction.equals(StateAction.SEND_TO_REVIEW)) {
+            if (stateAction.equals(UpdateEventUserRequest.StateAction.SEND_TO_REVIEW)) {
                 event.setEventState(EventState.PENDING);
-            } else if (stateAction.equals(StateAction.CANCEL_REVIEW)) {
+            } else if (stateAction.equals(UpdateEventUserRequest.StateAction.CANCEL_REVIEW)) {
                 event.setEventState(EventState.CANCELED);
             }
         }
@@ -152,7 +153,7 @@ public class EventServiceImpl implements EventService {
         getUser(userId);
         Event event = getEvent(eventId);
         long participationLimit = event.getParticipantLimit();
-        String status = requests.getStatus();
+        EventRequestStatusUpdateRequest.Status status = requests.getStatus();
         Long[] ids = requests.getRequestIds();
         long participationCount = requestStorage.getCountOfParticipation(eventId, Status.CONFIRMED);
 
@@ -168,9 +169,9 @@ public class EventServiceImpl implements EventService {
             throw new ConflictException(ErrorConstants.WRONG_COMBINATION_OF_INIT_AND_EVENT);
         }
 
-        if (status.equals(Status.CONFIRMED.toString())) {
+        if (status.toString().equals(Status.CONFIRMED.toString())) {
             return confirmRequests(ids, participationLimit, participationCount);
-        } else if (status.equals(Status.REJECTED.toString())) {
+        } else if (status.toString().equals(Status.REJECTED.toString())) {
             return rejectRequests(ids);
         } else {
             throw new ConflictException(WRONG_STATUS);
@@ -197,9 +198,9 @@ public class EventServiceImpl implements EventService {
     public EventFullDto updateEventStatusByAdmin(long eventId, UpdateEventAdminRequest dto) {
         Event event = getEvent(eventId);
         LocalDateTime eventDate = event.getEventDate();
-        StateAction stateAction = dto.getStateAction();
+        UpdateEventAdminRequest.StateAction stateAction = dto.getStateAction();
 
-        completeFieldsByAdminUpdate(dto, event);
+        completeFieldsForUpdated(dto, event);
 
         Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
         Map<Long, Long> views = getViews(List.of(event));
@@ -212,11 +213,11 @@ public class EventServiceImpl implements EventService {
         }
 
         if (stateAction != null) {
-            if (stateAction.equals(StateAction.PUBLISH_EVENT)) {
+            if (stateAction.equals(UpdateEventAdminRequest.StateAction.PUBLISH_EVENT)) {
                 event.setEventState(EventState.PUBLISHED);
                 event.setPublishedOn(LocalDateTime.now());
                 eventStorage.save(event);
-            } else if (stateAction.equals(StateAction.REJECT_EVENT)) {
+            } else if (stateAction.equals(UpdateEventAdminRequest.StateAction.REJECT_EVENT)) {
                 event.setEventState(EventState.CANCELED);
                 eventStorage.save(event);
             }
@@ -355,7 +356,7 @@ public class EventServiceImpl implements EventService {
         return result;
     }
 
-    private Event completeFieldsByAdminUpdate(UpdateEventAdminRequest dto, Event event) {
+    private Event completeFieldsForUpdated(UpdateEventRequest dto, Event event) {
         if (dto.getAnnotation() != null && !dto.getAnnotation().isBlank()) {
             event.setAnnotation(dto.getAnnotation());
         }
@@ -369,7 +370,7 @@ public class EventServiceImpl implements EventService {
             event.setEventDate(dto.getEventDate());
         }
         if (dto.getLocation() != null) {
-            event.setLocation(dto.getLocation());
+            event.setLocation(LocationMapper.makeLocation(dto.getLocation()));
         }
         if (dto.getPaid() != null) {
             event.setIsPaid(dto.getPaid());
@@ -380,51 +381,8 @@ public class EventServiceImpl implements EventService {
         if (dto.getRequestModeration() != null) {
             event.setRequestModeration(dto.getRequestModeration());
         }
-        if (dto.getTitle() != null) {
+        if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
             event.setTitle(dto.getTitle());
-        }
-        return event;
-    }
-
-    private Event completeFieldsByUserUpdate(UpdateEventUserRequest dto, Event event) {
-        StateAction stateAction = dto.getStateAction();
-
-        if (dto.getAnnotation() != null && !dto.getAnnotation().isBlank()) {
-            event.setAnnotation(dto.getAnnotation());
-        }
-        if (dto.getCategory() != null) {
-            event.setCategory(getCat(dto.getCategory()));
-        }
-        if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
-            event.setDescription(dto.getDescription());
-        }
-        if (dto.getEventDate() != null) {
-            event.setEventDate(dto.getEventDate());
-        }
-        if (dto.getLocation() != null) {
-            event.setLocation(dto.getLocation());
-        }
-        if (dto.getPaid() != null) {
-            event.setIsPaid(dto.getPaid());
-        }
-        if (dto.getParticipantLimit() != null) {
-            event.setParticipantLimit(dto.getParticipantLimit());
-        }
-        if (dto.getRequestModeration() != null) {
-            event.setRequestModeration(dto.getRequestModeration());
-        }
-        if (dto.getTitle() != null) {
-            event.setTitle(dto.getTitle());
-        }
-        if (stateAction != null) {
-            if (stateAction == StateAction.PUBLISH_EVENT) {
-                event.setEventState(EventState.PUBLISHED);
-                event.setPublishedOn(LocalDateTime.now());
-            } else if (stateAction == StateAction.SEND_TO_REVIEW) {
-                event.setEventState(EventState.PENDING);
-            } else if (stateAction == StateAction.CANCEL_REVIEW) {
-                event.setEventState(EventState.CANCELED);
-            }
         }
         return event;
     }
@@ -434,9 +392,8 @@ public class EventServiceImpl implements EventService {
                 .map(Event::getId)
                 .collect(toList());
 
-        return requestStorage.findParticipationRequestByEventIdInAndStatus(eventsIds, Status.CONFIRMED)
-                .stream()
-                .collect(groupingBy(pr -> pr.getEvent().getId(), Collectors.counting()));
+        return requestStorage.countByEvent(eventsIds).stream()
+                .collect(toMap(EventConfirmedParticipation::getEventId, EventConfirmedParticipation::getCount));
     }
 
     private Map<Long, Long> getViews(List<Event> events) {

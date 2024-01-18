@@ -3,6 +3,7 @@ package ru.practicum.event.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.NewEventDto;
@@ -21,6 +22,7 @@ import java.util.List;
 @RequestMapping("/users/{userId}/events")
 @Slf4j
 @RequiredArgsConstructor
+@Validated
 public class EventPrivateController {
 
     private final EventService service;
@@ -29,7 +31,7 @@ public class EventPrivateController {
     public List<EventFullDto> getInitiatorEvents(@PathVariable long userId,
                                                  @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                                  @RequestParam(defaultValue = "10") @Positive int size) {
-        log.debug("Получен запрос Get /users/{userId}/events");
+        log.debug("Получен запрос Get /users/{userId}/events?from={}&size={}", from, size);
         return service.getInitiatorEvents(userId, from, size);
     }
 

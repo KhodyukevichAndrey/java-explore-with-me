@@ -33,7 +33,6 @@ public class Event {
     @JoinColumn(name = "initiator")
     @ToString.Exclude
     private User initiator;
-    @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "lat", column = @Column(name = "location_lat")),
             @AttributeOverride(name = "lon", column = @Column(name = "location_lon"))})

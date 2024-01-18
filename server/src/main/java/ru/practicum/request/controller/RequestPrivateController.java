@@ -20,7 +20,7 @@ public class RequestPrivateController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto addRequest(@PathVariable long userId, @RequestParam long eventId) {
-        log.debug("Получен запрос Post /users/{userId}/requests");
+        log.debug("Получен запрос Post /users/{userId}/requests?eventId={}", eventId);
         return service.addRequest(userId, eventId);
     }
 

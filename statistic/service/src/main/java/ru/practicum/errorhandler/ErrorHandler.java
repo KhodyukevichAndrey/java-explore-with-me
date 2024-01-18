@@ -15,26 +15,14 @@ import javax.validation.ConstraintViolationException;
 @Slf4j
 public class ErrorHandler {
 
-    @ExceptionHandler({ConstraintViolationException.class, ValidateException.class})
+    @ExceptionHandler({ConstraintViolationException.class, ValidateException.class,
+            MissingServletRequestParameterException.class, MethodArgumentNotValidException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleConstraintViolationException(final RuntimeException exception) {
         log.debug("Получен статус 400 Bad Request {}", exception.getMessage(), exception);
         return new ErrorResponse(exception.getMessage());
     }
 
-    @ExceptionHandler(MissingServletRequestParameterException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleMissingServletRequestParameterExceptionException(final MissingServletRequestParameterException exception) {
-        log.debug("Получен статус 400 Bad Request {}", exception.getMessage(), exception);
-        return new ErrorResponse(exception.getMessage());
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleMethodArgumentNotValidException(final MethodArgumentNotValidException exception) {
-        log.debug("Получен статус 400 Bad Request {}", exception.getMessage(), exception);
-        return new ErrorResponse(exception.getMessage());
-    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

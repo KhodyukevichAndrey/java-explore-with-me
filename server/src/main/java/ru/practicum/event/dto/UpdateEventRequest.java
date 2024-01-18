@@ -6,37 +6,29 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.Valid;
-import javax.validation.constraints.*;
+import javax.validation.constraints.FutureOrPresent;
+import javax.validation.constraints.PositiveOrZero;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class NewEventDto {
-
+public class UpdateEventRequest {
     @Size(min = 20, max = 2000)
-    @NotBlank
     private String annotation;
-    @NotNull
     private Long category;
     @Size(min = 20, max = 7000)
-    @NotBlank
     private String description;
-    @NotNull
     @FutureOrPresent
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
     @Valid
     private LocationDto location;
-    @NotNull
-    private Boolean paid = false; //default
-    @NotNull
+    private Boolean paid;
     @PositiveOrZero
-    private Long participantLimit = 0L; //default
-    @NotNull
-    private Boolean requestModeration = true; //default
+    private Long participantLimit;
+    private Boolean requestModeration;
     @Size(min = 3, max = 120)
-    @NotBlank
     private String title;
-
 }

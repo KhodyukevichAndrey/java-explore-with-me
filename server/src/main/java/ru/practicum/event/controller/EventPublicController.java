@@ -2,7 +2,9 @@ package ru.practicum.event.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.client.StatsClient;
 import ru.practicum.dto.EndpointHitDto;
@@ -20,10 +22,13 @@ import java.util.List;
 @RequestMapping("/events")
 @Slf4j
 @RequiredArgsConstructor
+@Validated
 public class EventPublicController {
 
     private final EventService service;
     private final StatsClient client;
+    @Value("${app.name}")
+    private String appName;
 
     @GetMapping
     public List<EventShortDto> getEventsByFilter(@RequestParam(required = false) String text,
@@ -38,13 +43,11 @@ public class EventPublicController {
                                                  @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                                  @RequestParam(defaultValue = "10") @Positive int size,
                                                  HttpServletRequest request) {
-        log.debug("Получен запрос Get /events");
-        client.postEndpointHit(new EndpointHitDto(
-                "ewm-main-service",
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                LocalDateTime.now()
-        ));
+        log.debug("Получен запрос Get /events?text={}&categories={}&paid={}&rangeStart={}&rangeEnd={}&onlyAvailable={}" +
+                        "&sort={}&from={}&size={}", text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort,
+                from, size);
+        postEndpointHit(appName, request);
+
         return service.getEventForNotRegistrationUserByFiltering(text, categories, paid, rangeStart, rangeEnd,
                 onlyAvailable, sort, from, size);
     }
@@ -52,12 +55,17 @@ public class EventPublicController {
     @GetMapping("/{id}")
     public EventFullDto getEventById(@PathVariable long id, HttpServletRequest request) {
         log.debug("Получен запрос Get /events/{id}");
-        client.postEndpointHit(new EndpointHitDto(
-                "ewm-main-service",
+        postEndpointHit(appName, request);
+
+        return service.getEventForNotRegistrationUserById(id);
+    }
+
+    private void postEndpointHit(String appName, HttpServletRequest request) {
+        EndpointHitDto endpointHitDto = new EndpointHitDto(
+                appName,
                 request.getRequestURI(),
                 request.getRemoteAddr(),
-                LocalDateTime.now()
-        ));
-        return service.getEventForNotRegistrationUserById(id);
+                LocalDateTime.now());
+        client.postEndpointHit(endpointHitDto);
     }
 }

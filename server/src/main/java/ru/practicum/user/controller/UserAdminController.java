@@ -34,12 +34,14 @@ public class UserAdminController {
     public List<UserDto> getUsers(@RequestParam(required = false) List<Long> ids,
                                   @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                   @RequestParam(defaultValue = "10") @Positive int size) {
+        log.debug("Получен запрос Get /admin/users?ids={}&from={}&size={}", ids, from, size);
         return service.getUsers(ids, from, size);
     }
 
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable long userId) {
+        log.debug("Получен запрос Delete /admin/users/{userId}");
         service.deleteUser(userId);
     }
 }

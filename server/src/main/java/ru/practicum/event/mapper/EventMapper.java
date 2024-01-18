@@ -23,7 +23,7 @@ public class EventMapper {
                 dto.getDescription(),
                 dto.getEventDate(),
                 initiator,
-                dto.getLocation(),
+                LocationMapper.makeLocation(dto.getLocation()),
                 dto.getPaid(),
                 dto.getParticipantLimit(),
                 LocalDateTime.now(), //обновление после подтверждения события
@@ -43,7 +43,7 @@ public class EventMapper {
                 event.getDescription(),
                 event.getEventDate(),
                 UserMapper.makeUserShortDto(event.getInitiator()),
-                event.getLocation(),
+                LocationMapper.makeLocationDto(event.getLocation()),
                 event.getIsPaid(),
                 event.getParticipantLimit(),
                 event.getPublishedOn(),
@@ -57,7 +57,7 @@ public class EventMapper {
     public EventShortDto makeEventShortDto(Event event, long confirmedRequest, long views) {
         return new EventShortDto(
                 event.getAnnotation(),
-                event.getCategory(),
+                CategoryMapper.makeCatDto(event.getCategory()),
                 confirmedRequest,
                 event.getEventDate(),
                 event.getId(),

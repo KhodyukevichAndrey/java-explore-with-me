@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
@@ -15,6 +14,11 @@ public class EventRequestStatusUpdateRequest {
     @NotNull
     @NotEmpty
     private Long[] requestIds;
-    @NotBlank
-    private String status;
+    @NotNull
+    private Status status;
+
+    public enum Status {
+        CONFIRMED,
+        REJECTED
+    }
 }

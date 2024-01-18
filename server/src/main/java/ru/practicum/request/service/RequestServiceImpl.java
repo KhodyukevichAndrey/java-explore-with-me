@@ -10,6 +10,7 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.EntityNotFoundException;
 import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.mapper.RequestMapper;
+import ru.practicum.request.model.EventConfirmedParticipation;
 import ru.practicum.request.model.ParticipationRequest;
 import ru.practicum.request.status.Status;
 import ru.practicum.request.storage.RequestStorage;
@@ -20,8 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
 import static ru.practicum.constants.error.ErrorConstants.*;
 
 @Service
@@ -101,8 +101,7 @@ public class RequestServiceImpl implements RequestService {
                 .map(Event::getId)
                 .collect(toList());
 
-        return requestStorage.findParticipationRequestByEventIdInAndStatus(eventsIds, Status.CONFIRMED)
-                .stream()
-                .collect(groupingBy(pr -> pr.getEvent().getId(), Collectors.counting()));
+        return requestStorage.countByEvent(eventsIds).stream()
+                .collect(toMap(EventConfirmedParticipation::getEventId, EventConfirmedParticipation::getCount));
     }
 }
