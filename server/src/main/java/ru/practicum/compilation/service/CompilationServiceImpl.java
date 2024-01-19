@@ -1,10 +1,8 @@
 package ru.practicum.compilation.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatsClient;
@@ -15,22 +13,19 @@ import ru.practicum.compilation.mapper.CompilationMapper;
 import ru.practicum.compilation.model.Compilation;
 import ru.practicum.compilation.storage.CompilationStorage;
 import ru.practicum.constants.sort.SortConstants;
-import ru.practicum.dto.EndpointHitStatsDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
-import ru.practicum.event.state.EventState;
 import ru.practicum.event.storage.EventStorage;
 import ru.practicum.exception.EntityNotFoundException;
 import ru.practicum.request.model.EventConfirmedParticipation;
 import ru.practicum.request.storage.RequestStorage;
+import ru.practicum.utility.Utils;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
-import static ru.practicum.constants.error.ErrorConstants.ID_START_FROM;
 import static ru.practicum.constants.error.ErrorConstants.WRONG_COMPILATION_ID;
 
 @Service
@@ -54,7 +49,7 @@ public class CompilationServiceImpl implements CompilationService {
         if (dto.getEvents() != null) {
             addEventsToCompilation(compilation, new HashSet<>(dto.getEvents()));
             confirmedRequestByEventId = getConfirmedRequests(compilation.getEvents());
-            viewsByEventId = getViews(compilation.getEvents());
+            viewsByEventId = Utils.getViews(compilation.getEvents(), statsClient, objectMapper);
         } else {
             compilation.setEvents(Collections.emptySet());
         }
@@ -88,14 +83,14 @@ public class CompilationServiceImpl implements CompilationService {
         } else {
             addEventsToCompilation(compilation, dto.getEvents());
         }
-        if (dto.getTitle() != null) {
+        if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
             compilation.setTitle(dto.getTitle());
         }
 
         compilation = compilationStorage.save(compilation);
 
         Map<Long, Long> confirmedRequestByEventId = getConfirmedRequests(compilation.getEvents());
-        Map<Long, Long> viewsByEventId = getViews(compilation.getEvents());
+        Map<Long, Long> viewsByEventId = Utils.getViews(compilation.getEvents(), statsClient, objectMapper);
 
         return CompilationMapper.makeDto(compilation, makeEventShort(compilation.getEvents(),
                 confirmedRequestByEventId, viewsByEventId));
@@ -116,7 +111,7 @@ public class CompilationServiceImpl implements CompilationService {
 
         Set<Event> events = getEventsByCompilationId(compilations);
         Map<Long, Long> confirmedRequestByEventId = getConfirmedRequests(events);
-        Map<Long, Long> viewsByEventId = getViews(events);
+        Map<Long, Long> viewsByEventId = Utils.getViews(events, statsClient, objectMapper);
 
         for (Compilation compilation : compilations) {
             compilationDto.add(CompilationMapper.makeDto(compilation, makeEventShort(compilation.getEvents(),
@@ -131,7 +126,7 @@ public class CompilationServiceImpl implements CompilationService {
         Compilation compilation = getCompilation(compId);
 
         Map<Long, Long> confirmedRequestByEventId = getConfirmedRequests(compilation.getEvents());
-        Map<Long, Long> viewsByEventId = getViews(compilation.getEvents());
+        Map<Long, Long> viewsByEventId = Utils.getViews(compilation.getEvents(), statsClient, objectMapper);
 
         return CompilationMapper.makeDto(compilation, makeEventShort(compilation.getEvents(),
                 confirmedRequestByEventId, viewsByEventId));
@@ -158,33 +153,6 @@ public class CompilationServiceImpl implements CompilationService {
                 .collect(toMap(EventConfirmedParticipation::getEventId, EventConfirmedParticipation::getCount));
     }
 
-    private Map<Long, Long> getViews(Set<Event> events) {
-        List<Event> publishedEvents = events.stream()
-                .filter(event -> event.getEventState() == EventState.PUBLISHED)
-                .collect(toList());
-
-        if (publishedEvents.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        List<String> uris = events.stream()
-                .map(Event::getId)
-                .map(id -> "/events/" + id)
-                .collect(toList());
-        String[] urisArray = uris.toArray(new String[]{});
-
-        LocalDateTime rangeStart = publishedEvents.stream()
-                .map(Event::getPublishedOn)
-                .min(Comparator.naturalOrder()).get();
-
-        List<EndpointHitStatsDto> stats = getStatsDto(rangeStart.minusHours(1), LocalDateTime.now(), urisArray,
-                true);
-
-        return stats.stream()
-                .collect(toMap(endpoint -> Long.parseLong(endpoint.getUri().substring(ID_START_FROM)),
-                        EndpointHitStatsDto::getHits));
-    }
-
     private Set<EventShortDto> makeEventShort(Set<Event> events, Map<Long, Long> confirmed, Map<Long, Long> views) {
         if (events.isEmpty()) {
             return Collections.emptySet();
@@ -195,18 +163,6 @@ public class CompilationServiceImpl implements CompilationService {
                                 confirmed.getOrDefault(event.getId(), 0L),
                                 views.getOrDefault(event.getId(), 0L)))
                 .collect(Collectors.toSet());
-    }
-
-    private List<EndpointHitStatsDto> getStatsDto(LocalDateTime rangeStart, LocalDateTime rangeEnd, String[] urisArray,
-                                                  boolean unique) {
-        ResponseEntity<Object> responseEntity = statsClient.getStats(rangeStart, rangeEnd, urisArray, unique);
-
-        if (responseEntity.getBody() == null) {
-            return Collections.emptyList();
-        }
-
-        return objectMapper.convertValue(responseEntity.getBody(), new TypeReference<>() {
-        });
     }
 
     private Set<Event> getEventsByCompilationId(List<Compilation> compilations) {

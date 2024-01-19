@@ -1,19 +1,16 @@
 package ru.practicum.event.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.model.Category;
 import ru.practicum.client.StatsClient;
 import ru.practicum.constants.error.ErrorConstants;
 import ru.practicum.constants.sort.SortConstants;
-import ru.practicum.dto.EndpointHitStatsDto;
 import ru.practicum.event.dto.*;
 import ru.practicum.event.mapper.LocationMapper;
 import ru.practicum.event.model.Event;
@@ -34,6 +31,7 @@ import ru.practicum.request.status.Status;
 import ru.practicum.request.storage.RequestStorage;
 import ru.practicum.user.model.User;
 import ru.practicum.user.storage.UserStorage;
+import ru.practicum.utility.Utils;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -64,7 +62,7 @@ public class EventServiceImpl implements EventService {
                 PageRequest.of(from / size, size, SortConstants.SORT_EVENT_BY_ID_DESC));
 
         Map<Long, Long> confirmed = getConfirmedRequests(events);
-        Map<Long, Long> views = getViews(events);
+        Map<Long, Long> views = Utils.getViews(new HashSet<>(events), statsClient, objectMapper);
 
         return makeEventFull(events, confirmed, views);
     }
@@ -87,7 +85,7 @@ public class EventServiceImpl implements EventService {
         getUser(userId);
         Event event = getEvent(eventId);
         Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
-        Map<Long, Long> views = getViews(List.of(event));
+        Map<Long, Long> views = Utils.getViews(Set.of(event), statsClient, objectMapper);
 
         if (event.getInitiator().getId() == userId) {
             return makeEventFull(List.of(event), confirmed, views).get(0);
@@ -110,7 +108,7 @@ public class EventServiceImpl implements EventService {
         completeFieldsForUpdated(dto, event);
 
         Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
-        Map<Long, Long> views = getViews(List.of(event));
+        Map<Long, Long> views = Utils.getViews(Set.of(event), statsClient, objectMapper);
 
         if (event.getEventState().equals(EventState.PUBLISHED)) {
             throw new ConflictException(EVENT_NOT_AVAILABLE_STATE);
@@ -188,7 +186,7 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventStorage.findEventByAdminParameters(users, states, categories, rangeStart,
                 rangeEnd, PageRequest.of(from / size, size, SortConstants.SORT_EVENT_BY_ID_DESC));
         Map<Long, Long> confirmed = getConfirmedRequests(events);
-        Map<Long, Long> views = getViews(events);
+        Map<Long, Long> views = Utils.getViews(new HashSet<>(events), statsClient, objectMapper);
 
         return makeEventFull(events, confirmed, views);
     }
@@ -203,7 +201,7 @@ public class EventServiceImpl implements EventService {
         completeFieldsForUpdated(dto, event);
 
         Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
-        Map<Long, Long> views = getViews(List.of(event));
+        Map<Long, Long> views = Utils.getViews(Set.of(event), statsClient, objectMapper);
 
         if (!eventDate.isAfter(LocalDateTime.now().plusHours(1L))) {
             throw new ConflictException(ErrorConstants.EVENT_START_TIME);
@@ -248,7 +246,7 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventStorage.findEventByNotRegistrationUser(text, categories, isPaid, rangeStart, rangeEnd,
                 onlyAvailable, PageRequest.of(from / size, size, currentSort));
         Map<Long, Long> confirmedRequest = getConfirmedRequests(events);
-        Map<Long, Long> views = getViews(events);
+        Map<Long, Long> views = Utils.getViews(new HashSet<>(events), statsClient, objectMapper);
 
         return makeEventShort(events, confirmedRequest, views);
     }
@@ -257,7 +255,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto getEventForNotRegistrationUserById(long eventId) {
         Event event = getEvent(eventId);
         Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
-        Map<Long, Long> views = getViews(List.of(event));
+        Map<Long, Long> views = Utils.getViews(Set.of(event), statsClient, objectMapper);
 
         if (event.getEventState().equals(EventState.PUBLISHED)) {
             return makeEventFull(List.of(event), confirmed, views).get(0);
@@ -395,33 +393,6 @@ public class EventServiceImpl implements EventService {
                 .collect(toMap(EventConfirmedParticipation::getEventId, EventConfirmedParticipation::getCount));
     }
 
-    private Map<Long, Long> getViews(List<Event> events) {
-        List<Event> publishedEvents = events.stream()
-                .filter(event -> event.getEventState() == EventState.PUBLISHED)
-                .collect(toList());
-
-        if (publishedEvents.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        List<String> uris = events.stream()
-                .map(Event::getId)
-                .map(id -> "/events/" + id)
-                .collect(toList());
-        String[] urisArray = uris.toArray(new String[]{});
-
-        LocalDateTime rangeStart = publishedEvents.stream()
-                .map(Event::getPublishedOn)
-                .min(Comparator.naturalOrder()).get();
-
-        List<EndpointHitStatsDto> stats = getStatsDto(rangeStart.minusHours(1), LocalDateTime.now(), urisArray,
-                true);
-
-        return stats.stream()
-                .collect(toMap(endpoint -> Long.parseLong(endpoint.getUri().substring(ID_START_FROM)),
-                        EndpointHitStatsDto::getHits));
-    }
-
     private List<EventFullDto> makeEventFull(List<Event> events, Map<Long, Long> confirmed, Map<Long, Long> views) {
         return events.stream()
                 .map(event ->
@@ -438,19 +409,5 @@ public class EventServiceImpl implements EventService {
                                 confirmed.getOrDefault(event.getId(), 0L),
                                 views.getOrDefault(event.getId(), 0L)))
                 .collect(toList());
-    }
-
-    private List<EndpointHitStatsDto> getStatsDto(LocalDateTime rangeStart, LocalDateTime rangeEnd, String[] urisArray,
-                                                  boolean unique) {
-        ResponseEntity<Object> responseEntity = statsClient.getStats(rangeStart, rangeEnd, urisArray, unique);
-
-        Object object = responseEntity.getBody();
-
-        if (responseEntity.getBody() == null) {
-            return Collections.emptyList();
-        }
-
-        return objectMapper.convertValue(responseEntity.getBody(), new TypeReference<>() {
-        });
     }
 }
