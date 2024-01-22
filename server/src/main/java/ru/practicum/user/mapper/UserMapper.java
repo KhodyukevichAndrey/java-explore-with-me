@@ -12,7 +12,8 @@ public class UserMapper {
         return new User(
                 0,
                 newUserRequest.getEmail(),
-                newUserRequest.getName()
+                newUserRequest.getName(),
+                newUserRequest.getIsPublic()
         );
     }
 
@@ -20,7 +21,8 @@ public class UserMapper {
         return new UserDto(
                 user.getId(),
                 user.getEmail(),
-                user.getName()
+                user.getName(),
+                user.isPublic()
         );
     }
 

@@ -13,6 +13,6 @@ public interface CompilationStorage extends JpaRepository<Compilation, Long> {
 
     @Query("select c " +
             "from Compilation c " +
-            "LEFT JOIN FETCH c.events")
-    List<Compilation> findAllWithFetchedEvents(Pageable p); //TODO doesn't work
+            "LEFT JOIN FETCH c.events e ")
+    List<Compilation> findAllWithFetchedEvents(Pageable p); //TODO пока не работает, в процессе изучения
 }

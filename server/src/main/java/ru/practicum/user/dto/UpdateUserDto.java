@@ -5,19 +5,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class NewUserRequest {
+public class UpdateUserDto {
     @Size(min = 6, max = 254)
     @Email
-    @NotBlank
     private String email;
     @Size(min = 2, max = 250)
-    @NotBlank
     private String name;
-    private Boolean isPublic = true; // Добавлена возможность выбора приватности пользователя, по умолчанию публичный
+    private Boolean isPublic;
 }
