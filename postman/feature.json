@@ -464,7 +464,7 @@
           "response": []
         },
         {
-          "name": "Event 2 by Init 1",
+          "name": "unconfirmed Event  2 by Init 1",
           "event": [
             {
               "listen": "test",
@@ -530,7 +530,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"annotation\": \"Новое увлекательное событие №3\",\r\n  \"category\": 2,\r\n  \"description\": \"Новое увлекательное событие №3\",\r\n  \"eventDate\": \"2024-06-31 15:10:05\",\r\n  \"location\": {\r\n    \"lat\": 55.754167,\r\n    \"lon\": 37.62\r\n  },\r\n  \"paid\": true,\r\n  \"participantLimit\": 10,\r\n  \"requestModeration\": false,\r\n  \"title\": \"Новое увлекательное событие №3\"\r\n}",
+              "raw": "{\r\n  \"annotation\": \"Новое увлекательное событие №3\",\r\n  \"category\": 2,\r\n  \"description\": \"Новое увлекательное событие №3\",\r\n  \"eventDate\": \"2024-06-31 15:10:05\",\r\n  \"location\": {\r\n    \"lat\": 55.754167,\r\n    \"lon\": 37.62\r\n  },\r\n  \"paid\": false,\r\n  \"participantLimit\": 10,\r\n  \"requestModeration\": false,\r\n  \"title\": \"Новое увлекательное событие №3\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -620,7 +620,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"annotation\": \"Новый увлекательный поход №1\",\r\n  \"category\": 2,\r\n  \"description\": \"Новый увлекательный поход №1\",\r\n  \"eventDate\": \"2024-12-31 15:10:05\",\r\n  \"location\": {\r\n    \"lat\": 55.754167,\r\n    \"lon\": 37.62\r\n  },\r\n  \"paid\": true,\r\n  \"participantLimit\": 10,\r\n  \"requestModeration\": false,\r\n  \"stateAction\": \"PUBLISH_EVENT\",\r\n  \"title\": \"Новый увлекательный поход №1\"\r\n}",
+              "raw": "{\r\n  \"annotation\": \"Новое увлекательное событие №1\",\r\n  \"category\": 1,\r\n  \"description\": \"Новое увлекательное событие №1\",\r\n  \"eventDate\": \"2024-12-31 15:10:05\",\r\n  \"location\": {\r\n    \"lat\": 55.754167,\r\n    \"lon\": 37.62\r\n  },\r\n  \"paid\": true,\r\n  \"participantLimit\": 10,\r\n  \"requestModeration\": false,\r\n  \"stateAction\": \"PUBLISH_EVENT\",\r\n  \"title\": \"Новое увлекательное событие №1\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -638,51 +638,6 @@
                 "admin",
                 "events",
                 "1"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Confirm event 2",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 200\", function () {\r",
-                  "    pm.expect(pm.response.code).to.equal(200); \r",
-                  "    pm.response.to.be.withBody;\r",
-                  "    pm.response.to.be.json;\r",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "PATCH",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n  \"annotation\": \"Новый увлекательный поход №2\",\r\n  \"category\": 2,\r\n  \"description\": \"Новый увлекательный поход №2\",\r\n  \"eventDate\": \"2024-12-31 15:10:05\",\r\n  \"location\": {\r\n    \"lat\": 55.754167,\r\n    \"lon\": 37.62\r\n  },\r\n  \"paid\": true,\r\n  \"participantLimit\": 10,\r\n  \"requestModeration\": false,\r\n  \"stateAction\": \"PUBLISH_EVENT\",\r\n  \"title\": \"Новый увлекательный поход №2\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:8080/admin/events/2",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "admin",
-                "events",
-                "2"
               ]
             }
           },
@@ -710,7 +665,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"annotation\": \"Новый увлекательный концерт #1\",\r\n  \"category\": 2,\r\n  \"description\": \"Новый увлекательный концерт #1\",\r\n  \"eventDate\": \"2024-12-31 15:10:05\",\r\n  \"location\": {\r\n    \"lat\": 55.754167,\r\n    \"lon\": 37.62\r\n  },\r\n  \"paid\": true,\r\n  \"participantLimit\": 10,\r\n  \"requestModeration\": false,\r\n  \"stateAction\": \"PUBLISH_EVENT\",\r\n  \"title\": \"Новый увлекательный концерт #1\"\r\n}",
+              "raw": "{\r\n  \"annotation\": \"Новое увлекательное событие №3\",\r\n  \"category\": 2,\r\n  \"description\": \"Новое увлекательное событие №3\",\r\n  \"eventDate\": \"2024-12-31 15:10:05\",\r\n  \"location\": {\r\n    \"lat\": 55.754167,\r\n    \"lon\": 37.62\r\n  },\r\n  \"paid\": true,\r\n  \"participantLimit\": 10,\r\n  \"requestModeration\": false,\r\n  \"stateAction\": \"PUBLISH_EVENT\",\r\n  \"title\": \"Новое увлекательное событие №3\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1234,7 +1189,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/users/subscriptions/subscriber/search/4?text=Новый&categories=2&paid=true&rangeStart=2022-01-06%2013%3A30%3A38&rangeEnd=2097-09-06%2013%3A30%3A38&onlyAvailable=true&from=0&size=1000",
+              "raw": "http://localhost:8080/users/subscriptions/subscriber/search/4?text=Новое&categories=1&paid=true&rangeStart=2022-01-06%2013%3A30%3A38&rangeEnd=2097-09-06%2013%3A30%3A38&onlyAvailable=true&from=0&size=1000",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -1250,11 +1205,11 @@
               "query": [
                 {
                   "key": "text",
-                  "value": "Новый"
+                  "value": "Новое"
                 },
                 {
                   "key": "categories",
-                  "value": "2"
+                  "value": "1"
                 },
                 {
                   "key": "paid",
@@ -1574,6 +1529,33 @@
           "response": []
         }
       ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "value": "",
+      "type": "string",
+      "disabled": true
     }
   ]
 }
