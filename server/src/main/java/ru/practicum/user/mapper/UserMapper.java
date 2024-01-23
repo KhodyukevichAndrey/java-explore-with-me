@@ -13,7 +13,7 @@ public class UserMapper {
                 0,
                 newUserRequest.getEmail(),
                 newUserRequest.getName(),
-                newUserRequest.getIsPublic()
+                newUserRequest.isPublic()
         );
     }
 

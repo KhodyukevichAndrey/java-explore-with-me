@@ -1,5 +1,6 @@
 package ru.practicum.event.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -7,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.model.Category;
+import ru.practicum.client.StatsClient;
 import ru.practicum.constants.error.ErrorConstants;
 import ru.practicum.constants.sort.SortConstants;
 import ru.practicum.event.dto.*;
@@ -29,7 +31,7 @@ import ru.practicum.request.status.Status;
 import ru.practicum.request.storage.RequestStorage;
 import ru.practicum.user.model.User;
 import ru.practicum.user.storage.UserStorage;
-import ru.practicum.utility.Utils;
+import ru.practicum.utility.ViewsStorage;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -43,13 +45,14 @@ import static ru.practicum.constants.error.ErrorConstants.*;
 @Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class EventServiceImpl implements EventService {
+public class EventServiceImpl implements EventService, ViewsStorage {
 
     private final EventStorage eventStorage;
     private final UserStorage userStorage;
     private final CategoryStorage categoryStorage;
     private final RequestStorage requestStorage;
-    private final Utils utils;
+    private final StatsClient statsClient;
+    private final ObjectMapper objectMapper;
 
     // For EventPrivateController
     @Override
@@ -59,7 +62,7 @@ public class EventServiceImpl implements EventService {
                 PageRequest.of(from / size, size, SortConstants.SORT_EVENT_BY_ID_DESC));
 
         Map<Long, Long> confirmed = getConfirmedRequests(events);
-        Map<Long, Long> views = utils.getViews(new HashSet<>(events));
+        Map<Long, Long> views = getViews(new HashSet<>(events), statsClient, objectMapper);
 
         return makeEventFull(events, confirmed, views);
     }
@@ -82,7 +85,7 @@ public class EventServiceImpl implements EventService {
         getUser(userId);
         Event event = getEvent(eventId);
         Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
-        Map<Long, Long> views = utils.getViews(Set.of(event));
+        Map<Long, Long> views = getViews(Set.of(event), statsClient, objectMapper);
 
         if (event.getInitiator().getId() == userId) {
             return makeEventFull(List.of(event), confirmed, views).get(0);
@@ -105,7 +108,7 @@ public class EventServiceImpl implements EventService {
         completeFieldsForUpdated(dto, event);
 
         Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
-        Map<Long, Long> views = utils.getViews(Set.of(event));
+        Map<Long, Long> views = getViews(Set.of(event), statsClient, objectMapper);
 
         if (event.getEventState().equals(EventState.PUBLISHED)) {
             throw new ConflictException(EVENT_NOT_AVAILABLE_STATE);
@@ -183,7 +186,7 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventStorage.findEventByAdminParameters(users, states, categories, rangeStart,
                 rangeEnd, PageRequest.of(from / size, size, SortConstants.SORT_EVENT_BY_ID_DESC));
         Map<Long, Long> confirmed = getConfirmedRequests(events);
-        Map<Long, Long> views = utils.getViews(new HashSet<>(events));
+        Map<Long, Long> views = getViews(new HashSet<>(events), statsClient, objectMapper);
 
         return makeEventFull(events, confirmed, views);
     }
@@ -198,7 +201,7 @@ public class EventServiceImpl implements EventService {
         completeFieldsForUpdated(dto, event);
 
         Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
-        Map<Long, Long> views = utils.getViews(Set.of(event));
+        Map<Long, Long> views = getViews(Set.of(event), statsClient, objectMapper);
 
         if (!eventDate.isAfter(LocalDateTime.now().plusHours(1L))) {
             throw new ConflictException(ErrorConstants.EVENT_START_TIME);
@@ -243,7 +246,7 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventStorage.findEventByNotRegistrationUser(text, categories, isPaid, rangeStart, rangeEnd,
                 onlyAvailable, PageRequest.of(from / size, size, currentSort));
         Map<Long, Long> confirmedRequest = getConfirmedRequests(events);
-        Map<Long, Long> views = utils.getViews(new HashSet<>(events));
+        Map<Long, Long> views = getViews(new HashSet<>(events), statsClient, objectMapper);
 
         return makeEventShort(events, confirmedRequest, views);
     }
@@ -252,7 +255,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto getEventForNotRegistrationUserById(long eventId) {
         Event event = getEvent(eventId);
         Map<Long, Long> confirmed = getConfirmedRequests(List.of(event));
-        Map<Long, Long> views = utils.getViews(Set.of(event));
+        Map<Long, Long> views = getViews(Set.of(event), statsClient, objectMapper);
 
         if (event.getEventState().equals(EventState.PUBLISHED)) {
             return makeEventFull(List.of(event), confirmed, views).get(0);

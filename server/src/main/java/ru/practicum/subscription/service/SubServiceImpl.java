@@ -1,9 +1,11 @@
 package ru.practicum.subscription.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.client.StatsClient;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
@@ -21,7 +23,7 @@ import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.user.mapper.UserMapper;
 import ru.practicum.user.model.User;
 import ru.practicum.user.storage.UserStorage;
-import ru.practicum.utility.Utils;
+import ru.practicum.utility.ViewsStorage;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -37,13 +39,14 @@ import static ru.practicum.constants.sort.SortConstants.SORT_EVENT_BY_ID_DESC;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class SubServiceImpl implements SubService {
+public class SubServiceImpl implements SubService, ViewsStorage {
 
     private final SubStorage subStorage;
     private final EventStorage eventStorage;
     private final UserStorage userStorage;
     private final RequestStorage requestStorage;
-    private final Utils utils;
+    private final StatsClient statsClient;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -160,7 +163,7 @@ public class SubServiceImpl implements SubService {
         List<Event> eventsByInitiator = eventStorage.findFilterEventByInitiatorIdIn(text, categories, isPaid, rangeStart, rangeEnd,
                 onlyAvailable, PageRequest.of(from / size, size, SORT_EVENT_BY_ID_DESC), subscriberId);
         Map<Long, Long> confirmed = getConfirmedRequests(eventsByInitiator);
-        Map<Long, Long> views = utils.getViews(new HashSet<>(eventsByInitiator));
+        Map<Long, Long> views = getViews(new HashSet<>(eventsByInitiator), statsClient, objectMapper);
 
 
         return makeEventShort(eventsByInitiator, confirmed, views);

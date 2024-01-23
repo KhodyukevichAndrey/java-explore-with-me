@@ -19,5 +19,5 @@ public class NewUserRequest {
     @Size(min = 2, max = 250)
     @NotBlank
     private String name;
-    private Boolean isPublic = true; // Добавлена возможность выбора приватности пользователя, по умолчанию публичный
+    private boolean isPublic = true; // Добавлена возможность выбора приватности пользователя, по умолчанию публичный
 }
