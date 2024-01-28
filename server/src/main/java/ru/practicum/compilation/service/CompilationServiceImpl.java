@@ -1,11 +1,9 @@
 package ru.practicum.compilation.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.client.StatsClient;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.dto.NewCompilationDto;
 import ru.practicum.compilation.dto.UpdateCompilationRequest;
@@ -31,13 +29,12 @@ import static ru.practicum.constants.error.ErrorConstants.WRONG_COMPILATION_ID;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class CompilationServiceImpl implements CompilationService, ViewsStorage {
+public class CompilationServiceImpl implements CompilationService {
 
     private final CompilationStorage compilationStorage;
     private final EventStorage eventStorage;
     private final RequestStorage requestStorage;
-    private final StatsClient statsClient;
-    private final ObjectMapper objectMapper;
+    private final ViewsStorage viewsStorage;
 
     @Override
     @Transactional
@@ -49,7 +46,7 @@ public class CompilationServiceImpl implements CompilationService, ViewsStorage 
         if (dto.getEvents() != null) {
             addEventsToCompilation(compilation, new HashSet<>(dto.getEvents()));
             confirmedRequestByEventId = getConfirmedRequests(compilation.getEvents());
-            viewsByEventId = getViews(compilation.getEvents(), statsClient, objectMapper);
+            viewsByEventId = viewsStorage.getViews(compilation.getEvents());
         } else {
             compilation.setEvents(Collections.emptySet());
         }
@@ -90,7 +87,7 @@ public class CompilationServiceImpl implements CompilationService, ViewsStorage 
         compilation = compilationStorage.save(compilation);
 
         Map<Long, Long> confirmedRequestByEventId = getConfirmedRequests(compilation.getEvents());
-        Map<Long, Long> viewsByEventId = getViews(compilation.getEvents(), statsClient, objectMapper);
+        Map<Long, Long> viewsByEventId = viewsStorage.getViews(compilation.getEvents());
 
         return CompilationMapper.makeDto(compilation, makeEventShort(compilation.getEvents(),
                 confirmedRequestByEventId, viewsByEventId));
@@ -111,7 +108,7 @@ public class CompilationServiceImpl implements CompilationService, ViewsStorage 
 
         Set<Event> events = getEventsByCompilationId(compilations);
         Map<Long, Long> confirmedRequestByEventId = getConfirmedRequests(events);
-        Map<Long, Long> viewsByEventId = getViews(events, statsClient, objectMapper);
+        Map<Long, Long> viewsByEventId = viewsStorage.getViews(events);
 
         for (Compilation compilation : compilations) {
             compilationDto.add(CompilationMapper.makeDto(compilation, makeEventShort(compilation.getEvents(),
@@ -126,7 +123,7 @@ public class CompilationServiceImpl implements CompilationService, ViewsStorage 
         Compilation compilation = getCompilation(compId);
 
         Map<Long, Long> confirmedRequestByEventId = getConfirmedRequests(compilation.getEvents());
-        Map<Long, Long> viewsByEventId = getViews(compilation.getEvents(), statsClient, objectMapper);
+        Map<Long, Long> viewsByEventId = viewsStorage.getViews(compilation.getEvents());
 
         return CompilationMapper.makeDto(compilation, makeEventShort(compilation.getEvents(),
                 confirmedRequestByEventId, viewsByEventId));

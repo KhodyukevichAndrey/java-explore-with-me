@@ -1,11 +1,9 @@
 package ru.practicum.subscription.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.client.StatsClient;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
@@ -39,14 +37,13 @@ import static ru.practicum.constants.sort.SortConstants.SORT_EVENT_BY_ID_DESC;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class SubServiceImpl implements SubService, ViewsStorage {
+public class SubServiceImpl implements SubService {
 
     private final SubStorage subStorage;
     private final EventStorage eventStorage;
     private final UserStorage userStorage;
     private final RequestStorage requestStorage;
-    private final StatsClient statsClient;
-    private final ObjectMapper objectMapper;
+    private final ViewsStorage viewsStorage;
 
     @Override
     @Transactional
@@ -163,7 +160,7 @@ public class SubServiceImpl implements SubService, ViewsStorage {
         List<Event> eventsByInitiator = eventStorage.findFilterEventByInitiatorIdIn(text, categories, isPaid, rangeStart, rangeEnd,
                 onlyAvailable, PageRequest.of(from / size, size, SORT_EVENT_BY_ID_DESC), subscriberId);
         Map<Long, Long> confirmed = getConfirmedRequests(eventsByInitiator);
-        Map<Long, Long> views = getViews(new HashSet<>(eventsByInitiator), statsClient, objectMapper);
+        Map<Long, Long> views = viewsStorage.getViews(new HashSet<>(eventsByInitiator));
 
 
         return makeEventShort(eventsByInitiator, confirmed, views);
