@@ -34,4 +34,10 @@ public class ErrorConstants {
     public static final String WRONG_EVENT_STATUS_FOR_CONFIRM = "Согласование события из данного статуса - недопустимо";
     public static final String WRONG_CONDITION = "Дата начала не должна быть позже даты окончания";
     public static final int ID_START_FROM = 8;
+    public static final String PRIVATE_ACCOUNT = "Пользователь ограничил возможность подписки на себя";
+    public static final String WRONG_SUBSTATUS = "Подписка в подходящем статусе отсутствует";
+    public static final String ALREADY_CONFIRMED = "Запрос уже подтвержден";
+    public static final String ALREADY_REJECTED = "Запрос уже отклонен";
+    public static final String NO_SUB_REQUESTS = "У вас нет подписок ожидающих обработки";
+    public static final String SUB_REQUEST_DID_NOT_EXIST = "Запрос не найден";
 }

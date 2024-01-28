@@ -19,4 +19,6 @@ public class User {
     private String email;
     @Column(unique = true)
     private String name;
+    @Column(name = "is_public")
+    private boolean isPublic;
 }

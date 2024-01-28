@@ -2,8 +2,10 @@ package ru.practicum.utility;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.experimental.UtilityClass;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.StatsClient;
 import ru.practicum.dto.EndpointHitStatsDto;
 import ru.practicum.event.model.Event;
@@ -16,10 +18,15 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static ru.practicum.constants.error.ErrorConstants.ID_START_FROM;
 
-@UtilityClass
-public class Utils {
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class ViewsStorageImpl implements ViewsStorage {
 
-    public Map<Long, Long> getViews(Set<Event> events, StatsClient statsClient, ObjectMapper objectMapper) {
+    private final StatsClient statsClient;
+    private final ObjectMapper objectMapper;
+
+    public Map<Long, Long> getViews(Set<Event> events) {
         List<Event> publishedEvents = events.stream()
                 .filter(event -> event.getEventState() == EventState.PUBLISHED)
                 .collect(toList());
@@ -39,7 +46,7 @@ public class Utils {
                 .min(Comparator.naturalOrder()).get();
 
         List<EndpointHitStatsDto> stats = getStatsDto(rangeStart.minusHours(1), LocalDateTime.now(), urisArray,
-                true, statsClient, objectMapper);
+                true);
 
         return stats.stream()
                 .collect(toMap(endpoint -> Long.parseLong(endpoint.getUri().substring(ID_START_FROM)),
@@ -47,7 +54,7 @@ public class Utils {
     }
 
     private List<EndpointHitStatsDto> getStatsDto(LocalDateTime rangeStart, LocalDateTime rangeEnd, String[] urisArray,
-                                                  boolean unique, StatsClient statsClient, ObjectMapper objectMapper) {
+                                                  boolean unique) {
         ResponseEntity<Object> responseEntity = statsClient.getStats(rangeStart, rangeEnd, urisArray, unique);
 
         if (responseEntity.getBody() == null) {

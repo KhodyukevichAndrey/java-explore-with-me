@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.exception.EntityNotFoundException;
 import ru.practicum.user.dto.NewUserRequest;
+import ru.practicum.user.dto.UpdateUserDto;
 import ru.practicum.user.dto.UserDto;
 import ru.practicum.user.mapper.UserMapper;
 import ru.practicum.user.model.User;
@@ -50,6 +51,26 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(long userId) {
         getUser(userId);
         storage.deleteById(userId);
+    }
+
+    @Override
+    @Transactional
+    public UserDto updateUserByUser(long userId, UpdateUserDto updateUserDto) {
+        User user = getUser(userId);
+
+        if (updateUserDto.getEmail() != null && !updateUserDto.getEmail().isBlank()) {
+            user.setEmail(updateUserDto.getEmail());
+        }
+
+        if (updateUserDto.getName() != null && !updateUserDto.getName().isBlank()) {
+            user.setName(updateUserDto.getName());
+        }
+
+        if (updateUserDto.getIsPublic() != null && updateUserDto.getIsPublic() != user.isPublic()) {
+            user.setPublic(updateUserDto.getIsPublic());
+        }
+
+        return UserMapper.makeUserDto(storage.save(user));
     }
 
     private User getUser(long userId) {
