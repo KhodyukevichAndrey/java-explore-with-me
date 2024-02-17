@@ -29,9 +29,10 @@
 - Public: Публичная часть предоставляет не авторизированным пользователям доступ к ограниченному функционалу прилжения. Предоставляется краткая информация о мероприятиях и подборках этих событий.
 - Private: Приватная часть предоставляет доступ к полному функционалу для авторизированных пользователей, к примеру таких как: Организация мероприятия, направление запросов на участие и т.д.
 
+
 Более подробно с функционалом приложения можно ознакомиться в описанной спецификации при помощи сервиса Swagger.io:
-[Основной сервис](https://github.com/KhodyukevichAndrey/java-explore-with-me/blob/main/ewm-main-service-spec.json)
-[Сервис статистики](https://github.com/KhodyukevichAndrey/java-explore-with-me/blob/main/postman/ewm-stats-service-spec.json)
+- [Основной сервис](https://github.com/KhodyukevichAndrey/java-explore-with-me/blob/main/ewm-main-service-spec.json)
+- [Сервис статистики](https://github.com/KhodyukevichAndrey/java-explore-with-me/blob/main/ewm-stats-service-spec.json)
 
 
 # Планы по доработке проекта
